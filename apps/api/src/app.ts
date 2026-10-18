@@ -4,6 +4,8 @@ import { logger } from "./shared/logger.js";
 import { isDbConnected } from "./shared/db/connection.js";
 import { requestId } from "./shared/middleware/request-id.js";
 import { errorHandler, notFoundHandler } from "./shared/middleware/error-handler.js";
+import cookieParser from "cookie-parser";
+import { authRouter } from "./modules/auth/auth.routes.js";
 
 export function createApp() {
   const app = express();
@@ -12,7 +14,8 @@ export function createApp() {
   app.use(requestId);
   app.use(pinoHttp({ logger, genReqId: (req) => (req as express.Request).id }));
   app.use(express.json({ limit: "100kb" }));
-
+  app.use(cookieParser());
+  app.use("/api/v1/auth", authRouter);
   app.get("/api/v1/health", (_req, res) => {
     const dbOk = isDbConnected();
     res.status(dbOk ? 200 : 503).json({
