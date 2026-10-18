@@ -1,0 +1,10 @@
+{
+  "name": "barberos",
+  "version": "0.1.0",
+  "private": true,
+  "description": "BarberOS: plataforma de gestión para barberías",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {}
+}
