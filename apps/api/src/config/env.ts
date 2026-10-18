@@ -9,6 +9,7 @@ const envSchema = z.object({
     .refine((v) => v.startsWith("mongodb://") || v.startsWith("mongodb+srv://"), {
       message: "Debe comenzar con mongodb:// o mongodb+srv://",
     }),
+  JWT_ACCESS_SECRET: z.string().min(32, "Debe tener al menos 32 caracteres"),
 });
 
 const parsed = envSchema.safeParse(process.env);
