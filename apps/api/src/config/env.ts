@@ -4,6 +4,11 @@ const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   PORT: z.coerce.number().int().positive().default(4000),
   WEB_ORIGIN: z.url(),
+  MONGODB_URI: z
+    .string()
+    .refine((v) => v.startsWith("mongodb://") || v.startsWith("mongodb+srv://"), {
+      message: "Debe comenzar con mongodb:// o mongodb+srv://",
+    }),
 });
 
 const parsed = envSchema.safeParse(process.env);
