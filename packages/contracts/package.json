@@ -1,0 +1,20 @@
+{
+  "name": "@barberos/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Contratos compartidos: enums, permisos y esquemas Zod",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@barberos/config": "workspace:*",
+    "@types/node": "^26.6.5"
+  },
+  "dependencies": {
+    "zod": "^4.6.7"
+  }
+}
