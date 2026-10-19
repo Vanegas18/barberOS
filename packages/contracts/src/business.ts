@@ -45,3 +45,11 @@ export const createBusinessSchema = z.object({
   timezone: timezoneSchema.default("America/Bogota"),
 });
 export type CreateBusinessInput = z.infer<typeof createBusinessSchema>;
+
+export const updateBusinessSchema = z
+  .object({
+    name: createBusinessSchema.shape.name.optional(),
+    timezone: timezoneSchema.optional(),
+  })
+  .refine((v) => Object.keys(v).length > 0, "Debes enviar al menos un campo");
+export type UpdateBusinessInput = z.infer<typeof updateBusinessSchema>;

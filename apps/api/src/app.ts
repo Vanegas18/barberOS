@@ -1,4 +1,4 @@
-import express from "express";
+import express, { Router } from "express";
 import { pinoHttp } from "pino-http";
 import { logger } from "./shared/logger.js";
 import { isDbConnected } from "./shared/db/connection.js";
@@ -11,7 +11,13 @@ import helmet from "helmet";
 import { env } from "./config/env.js";
 import { originCheck } from "./shared/middleware/origin-check.js";
 import { apiLimiter, authLimiter } from "./shared/middleware/rate-limit.js";
-import { businessRouter, meRouter } from "./modules/businesses/business.routes.js";
+import {
+  businessRouter,
+  meRouter,
+  businessTenantRouter,
+} from "./modules/businesses/business.routes.js";
+import { authenticate } from "./modules/auth/authenticate.middleware.js";
+import { tenantContext } from "./modules/memberships/tenant-context.middleware.js";
 
 export function createApp() {
   const app = express();
@@ -30,6 +36,11 @@ export function createApp() {
   app.use("/api/v1/auth", authRouter);
   app.use("/api/v1/businesses", businessRouter);
   app.use("/api/v1/me", meRouter);
+  // Todas las rutas privadas de un negocio cuelgan de aquí y heredan la protección.
+  const tenantRouter = Router({ mergeParams: true });
+  tenantRouter.use("/", businessTenantRouter);
+
+  app.use("/api/v1/businesses/:businessId", authenticate, tenantContext, tenantRouter);
   app.get("/api/v1/health", (_req, res) => {
     const dbOk = isDbConnected();
     res.status(dbOk ? 200 : 503).json({
