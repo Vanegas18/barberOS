@@ -1,4 +1,4 @@
-import type { LoginInput, RegisterInput } from "@barberos/contracts";
+import type { LoginInput, PublicUser, RegisterInput } from "@barberos/contracts";
 import { AppError } from "../../shared/errors/app-error.js";
 import { withTransaction } from "../../shared/db/transaction.js";
 import { hashPassword, verifyPassword } from "./password.service.js";
@@ -7,12 +7,6 @@ import { issueSession, revokeAllUserSessions } from "./session.service.js";
 import type { IssuedTokens } from "./session.service.js";
 import { hashRefreshToken } from "./token.service.js";
 import { UserModel } from "./user.model.js";
-
-export interface PublicUser {
-  id: string;
-  name: string;
-  email: string;
-}
 
 export interface AuthResult {
   user: PublicUser;

@@ -7,11 +7,12 @@
     "node": ">=22"
   },
   "scripts": {
-      "dev": "pnpm -r --parallel --filter \"./apps/*\" run dev",
-      "typecheck": "pnpm -r run typecheck",
-      "lint": "eslint .",
-      "format": "prettier --write .",
-      "format:check": "prettier --check ."
+    "dev": "pnpm -r --parallel --filter \"./apps/*\" run dev",
+    "typecheck": "pnpm -r run typecheck",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "pnpm -r run test"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

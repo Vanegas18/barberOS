@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
 /* Paleta cerrada: solo existen los colores de BarberOS. */
 @theme {
@@ -9,7 +11,7 @@
   /* Neutros */
   --color-ink: #0f1b2d;
   --color-ink-soft: #3d4757;
-  --color-muted: #5b6577;
+  --color-ink-muted: #5b6577;
   --color-line: #e4e7ec;
   --color-line-soft: #eef0f3;
   --color-surface: #ffffff;
@@ -22,7 +24,7 @@
   --color-brand-tint: #dce4f8;
   --color-brand-line: #c9d5f3;
 
-  /* Rojo barbero: marca, "ahora" y "no asistió". Nunca en botones normales. */
+  /* Rojo barbero: marca, "ahora", errores y "no asistió". Nunca en botones normales. */
   --color-pole: #c8102e;
   --color-pole-ink: #a40e26;
   --color-pole-soft: #fbe3e7;
@@ -45,10 +47,58 @@
   --color-pending-line: #f3d9a8;
 }
 
-/* Fuentes de next/font: "inline" porque referencian otras variables. */
+/* Variables semánticas que usan los componentes de shadcn, apuntando a la paleta. */
+:root {
+  --radius: 0.625rem;
+
+  --background: #f7f8fa;
+  --foreground: #0f1b2d;
+  --card: #ffffff;
+  --card-foreground: #0f1b2d;
+  --popover: #ffffff;
+  --popover-foreground: #0f1b2d;
+  --primary: #1f3c88;
+  --primary-foreground: #ffffff;
+  --secondary: #eef2fc;
+  --secondary-foreground: #1f3c88;
+  --muted: #eef0f3;
+  --muted-foreground: #5b6577;
+  --accent: #eef2fc;
+  --accent-foreground: #1f3c88;
+  --destructive: #c8102e;
+  --border: #e4e7ec;
+  /* Borde de inputs con contraste 3:1 sobre blanco (WCAG para controles). */
+  --input: #8a93a3;
+  --ring: #1f3c88;
+}
+
 @theme inline {
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
 }
 
 /* Franja de poste de barbería: logo y borde superior. */
@@ -63,10 +113,13 @@
 }
 
 @layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
   html {
     color-scheme: light;
   }
   body {
-    @apply bg-canvas font-sans text-ink antialiased;
+    @apply bg-background font-sans text-foreground antialiased;
   }
 }

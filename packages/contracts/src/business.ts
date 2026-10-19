@@ -12,6 +12,20 @@ const RESERVED_SLUGS: readonly string[] = [
   "settings",
   "static",
   "www",
+  // Rutas propias del frontend (en español)
+  "ingresar",
+  "registro",
+  "inicio",
+  "negocios",
+  "cuenta",
+  "ajustes",
+  "ayuda",
+  "soporte",
+  "recuperar",
+  "reservas",
+  "precios",
+  "terminos",
+  "privacidad",
 ];
 
 export const slugSchema = z
