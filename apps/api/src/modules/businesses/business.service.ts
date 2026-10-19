@@ -2,7 +2,10 @@ import { Types } from "mongoose";
 import type { CreateBusinessInput, Role } from "@barberos/contracts";
 import { withTransaction } from "../../shared/db/transaction.js";
 import { AppError } from "../../shared/errors/app-error.js";
-import { MembershipModel } from "../memberships/membership.model.js";
+import {
+  createOwnerMembership,
+  listActiveMembershipsForUser,
+} from "../memberships/membership.service.js";
 import { BusinessModel } from "./business.model.js";
 
 export interface BusinessSummary {
@@ -56,10 +59,7 @@ export async function createBusiness(
       );
       if (!business) throw new Error("No se pudo crear el negocio");
 
-      await MembershipModel.create(
-        [{ businessId: business._id, userId: new Types.ObjectId(userId), role: "owner" }],
-        { session },
-      );
+      await createOwnerMembership(business._id.toString(), userId, session);
 
       return { ...toSummary(business), role: "owner" as const };
     });
@@ -72,23 +72,17 @@ export async function createBusiness(
 }
 
 export async function listBusinessesForUser(userId: string): Promise<BusinessWithRole[]> {
-  // skipTenantCheck: caso legítimo. Aquí aún no hay negocio activo; se pregunta
-  // justamente "¿a qué negocios pertenece este usuario?". Filtramos por userId.
-  const memberships = await MembershipModel.find({
-    userId: new Types.ObjectId(userId),
-    status: "active",
-  }).setOptions({ skipTenantCheck: true });
-
+  const memberships = await listActiveMembershipsForUser(userId);
   if (memberships.length === 0) return [];
 
   const businesses = await BusinessModel.find({
-    _id: { $in: memberships.map((m) => m.businessId) },
+    _id: { $in: memberships.map((m) => new Types.ObjectId(m.businessId)) },
   });
   const byId = new Map(businesses.map((b) => [b._id.toString(), b]));
 
   const result: BusinessWithRole[] = [];
   for (const m of memberships) {
-    const business = byId.get(m.businessId.toString());
+    const business = byId.get(m.businessId);
     if (business) result.push({ ...toSummary(business), role: m.role });
   }
   return result.sort((a, b) => a.name.localeCompare(b.name));
