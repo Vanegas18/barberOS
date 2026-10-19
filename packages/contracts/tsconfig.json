@@ -1,7 +1,8 @@
 {
   "extends": "@barberos/config/tsconfig.node.json",
   "compilerOptions": {
-    "noEmit": true
+    "noEmit": true,
+    "allowImportingTsExtensions": true
   },
   "include": ["src"]
 }
