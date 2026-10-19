@@ -6,6 +6,11 @@ import { requestId } from "./shared/middleware/request-id.js";
 import { errorHandler, notFoundHandler } from "./shared/middleware/error-handler.js";
 import cookieParser from "cookie-parser";
 import { authRouter } from "./modules/auth/auth.routes.js";
+import cors from "cors";
+import helmet from "helmet";
+import { env } from "./config/env.js";
+import { originCheck } from "./shared/middleware/origin-check.js";
+import { apiLimiter, authLimiter } from "./shared/middleware/rate-limit.js";
 
 export function createApp() {
   const app = express();
@@ -13,8 +18,14 @@ export function createApp() {
   app.disable("x-powered-by");
   app.use(requestId);
   app.use(pinoHttp({ logger, genReqId: (req) => (req as express.Request).id }));
+  app.use(helmet());
+  app.use(cors({ origin: env.WEB_ORIGIN, credentials: true }));
+  app.use(apiLimiter);
+  app.use(originCheck);
   app.use(express.json({ limit: "100kb" }));
   app.use(cookieParser());
+  app.use("/api/v1/auth/login", authLimiter);
+  app.use("/api/v1/auth/register", authLimiter);
   app.use("/api/v1/auth", authRouter);
   app.get("/api/v1/health", (_req, res) => {
     const dbOk = isDbConnected();
