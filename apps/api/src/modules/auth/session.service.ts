@@ -40,3 +40,17 @@ export async function issueSession(
     refreshExpiresAt,
   };
 }
+
+export async function revokeAllUserSessions(userId: Types.ObjectId): Promise<void> {
+  await SessionModel.updateMany(
+    { userId, revokedAt: { $exists: false } },
+    { $set: { revokedAt: new Date() } },
+  );
+}
+
+export async function revokeSessionByToken(refreshToken: string): Promise<void> {
+  await SessionModel.updateOne(
+    { refreshTokenHash: hashRefreshToken(refreshToken), revokedAt: { $exists: false } },
+    { $set: { revokedAt: new Date() } },
+  );
+}
