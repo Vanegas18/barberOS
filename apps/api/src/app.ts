@@ -11,6 +11,7 @@ import helmet from "helmet";
 import { env } from "./config/env.js";
 import { originCheck } from "./shared/middleware/origin-check.js";
 import { apiLimiter, authLimiter } from "./shared/middleware/rate-limit.js";
+import { businessRouter, meRouter } from "./modules/businesses/business.routes.js";
 
 export function createApp() {
   const app = express();
@@ -27,6 +28,8 @@ export function createApp() {
   app.use("/api/v1/auth/login", authLimiter);
   app.use("/api/v1/auth/register", authLimiter);
   app.use("/api/v1/auth", authRouter);
+  app.use("/api/v1/businesses", businessRouter);
+  app.use("/api/v1/me", meRouter);
   app.get("/api/v1/health", (_req, res) => {
     const dbOk = isDbConnected();
     res.status(dbOk ? 200 : 503).json({
