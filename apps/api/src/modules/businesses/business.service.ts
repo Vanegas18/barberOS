@@ -25,7 +25,6 @@ interface AccessFields {
   trialEndsAt?: Date | null;
 }
 
-
 export function resolveBusinessAccess(b: AccessFields, now: Date = new Date()): BusinessAccess {
   if (b.status === "suspended") return "suspended";
   if (b.status === "trial" && (!b.trialEndsAt || b.trialEndsAt.getTime() <= now.getTime())) {

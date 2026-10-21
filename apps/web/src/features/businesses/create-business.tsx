@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowRight, Check } from "lucide-react";
+import { ArrowRight, ArrowLeft, Check } from "lucide-react";
 import Link from "next/link";
 import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -24,11 +24,27 @@ export function CreateBusiness() {
   const [created, setCreated] = useState<BusinessWithRole | null>(null);
   const businesses = useMyBusinesses();
   const isFirst = businesses.data?.length === 0;
+  const backHref =
+    businesses.data && businesses.data.length > 0
+      ? businesses.data.length === 1
+        ? `/${businesses.data[0]!.slug}`
+        : "/negocios"
+      : null;
 
   if (created) return <BusinessCreated business={created} />;
 
   return (
     <div className="flex w-full max-w-[980px] flex-wrap items-start gap-6">
+      {backHref && (
+        <div className="w-full">
+          <Button asChild variant="ghost" className="-ml-3 px-3">
+            <Link href={backHref}>
+              <ArrowLeft aria-hidden="true" />
+              Volver
+            </Link>
+          </Button>
+        </div>
+      )}
       <section className="flex min-w-0 flex-[999_1_480px] flex-col gap-6 rounded-lg border border-line bg-surface p-5 sm:p-8">
         {isFirst && <OnboardingSteps current={2} />}
         <div className="flex flex-col gap-1.5">
