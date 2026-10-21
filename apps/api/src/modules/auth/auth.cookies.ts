@@ -6,6 +6,7 @@ import type { IssuedTokens } from "./session.service.js";
 export const ACCESS_COOKIE = "bo_access";
 export const REFRESH_COOKIE = "bo_refresh";
 export const REFRESH_COOKIE_PATH = "/api/v1/auth";
+export const SESSION_COOKIE = "bo_session";
 
 const baseOptions: CookieOptions = {
   httpOnly: true,
@@ -24,9 +25,15 @@ export function setAuthCookies(res: Response, tokens: IssuedTokens): void {
     path: REFRESH_COOKIE_PATH,
     expires: tokens.refreshExpiresAt,
   });
+  res.cookie(SESSION_COOKIE, "1", {
+    ...baseOptions,
+    path: "/",
+    expires: tokens.refreshExpiresAt,
+  });
 }
 
 export function clearAuthCookies(res: Response): void {
   res.clearCookie(ACCESS_COOKIE, { ...baseOptions, path: "/" });
   res.clearCookie(REFRESH_COOKIE, { ...baseOptions, path: REFRESH_COOKIE_PATH });
+  res.clearCookie(SESSION_COOKIE, { ...baseOptions, path: "/" });
 }

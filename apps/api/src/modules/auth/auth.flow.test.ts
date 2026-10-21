@@ -181,3 +181,42 @@ describe("GET /auth/me", () => {
     expect(res.status).toBe(401);
   });
 });
+
+describe("cookie indicadora de sesión (bo_session)", () => {
+  const rawCookie = (res: WithHeaders, name: string) =>
+    ((res.headers["set-cookie"] ?? []) as string[]).find((c) => c.startsWith(`${name}=`));
+
+  it("el login la crea en toda la app, httpOnly y con la misma vida que el refresh", async () => {
+    await signUp();
+    const res = await login({ email: credentials.email, password: credentials.password });
+
+    const session = rawCookie(res, "bo_session");
+    const refresh = rawCookie(res, "bo_refresh");
+    expect(session).toMatch(/^bo_session=1;/);
+    expect(session).toContain("Path=/;");
+    expect(session).toContain("HttpOnly");
+    const expires = (c?: string) => /Expires=([^;]+)/.exec(c ?? "")?.[1];
+    expect(expires(session)).toBeDefined();
+    expect(expires(session)).toBe(expires(refresh));
+  });
+
+  it("el logout la borra", async () => {
+    const reg = await signUp();
+    const out = await request(app)
+      .post("/api/v1/auth/logout")
+      .set("Cookie", cookiePair(reg, "bo_refresh"));
+    expect(rawCookie(out, "bo_session")).toMatch(/^bo_session=;/);
+  });
+
+  it("un refresh con token inválido también la borra", async () => {
+    const res = await refreshWith("bo_refresh=token-inventado");
+    expect(res.status).toBe(401);
+    expect(rawCookie(res, "bo_session")).toMatch(/^bo_session=;/);
+  });
+
+  it("un refresh sin cookie también la borra (evita el bucle proxy ↔ ingreso)", async () => {
+    const res = await request(app).post("/api/v1/auth/refresh");
+    expect(res.status).toBe(401);
+    expect(rawCookie(res, "bo_session")).toMatch(/^bo_session=;/);
+  });
+});

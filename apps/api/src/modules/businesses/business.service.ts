@@ -2,8 +2,9 @@ import { Types } from "mongoose";
 import type {
   BusinessAccess,
   BusinessStatus,
+  BusinessSummary,
+  BusinessWithRole,
   CreateBusinessInput,
-  Role,
   UpdateBusinessInput,
 } from "@barberos/contracts";
 import { withTransaction } from "../../shared/db/transaction.js";
@@ -19,30 +20,12 @@ import { BusinessModel } from "./business.model.js";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-export interface BusinessSummary {
-  id: string;
-  name: string;
-  slug: string;
-  currency: string;
-  timezone: string;
-  status: BusinessStatus;
-  trialEndsAt: string | null;
-  access: BusinessAccess;
-}
-
-export interface BusinessWithRole extends BusinessSummary {
-  role: Role;
-}
-
 interface AccessFields {
   status?: BusinessStatus | null;
   trialEndsAt?: Date | null;
 }
 
-/**
- * Acceso efectivo al panel. La prueba vence sola por fecha (sin tareas programadas).
- * Un documento antiguo sin `status` se trata como activo.
- */
+
 export function resolveBusinessAccess(b: AccessFields, now: Date = new Date()): BusinessAccess {
   if (b.status === "suspended") return "suspended";
   if (b.status === "trial" && (!b.trialEndsAt || b.trialEndsAt.getTime() <= now.getTime())) {
@@ -80,12 +63,10 @@ export async function createBusiness(
   userId: string,
   input: CreateBusinessInput,
 ): Promise<BusinessWithRole> {
-  // El _id se genera antes para que el código registre a qué negocio se aplicó.
   const businessId = new Types.ObjectId();
 
   try {
     return await withTransaction(async (session) => {
-      // Primero el código: si no es válido, no se intenta nada más.
       const { trialDays } = await consumeActivationCode(
         input.activationCode,
         { userId, businessId: businessId.toString() },
@@ -137,7 +118,6 @@ export async function listBusinessesForUser(userId: string): Promise<BusinessWit
   return result.sort((a, b) => a.name.localeCompare(b.name));
 }
 
-/** Acceso efectivo de un negocio, o null si no existe. Lo usa tenantContext. */
 export async function getBusinessAccess(businessId: string): Promise<BusinessAccess | null> {
   if (!isObjectIdString(businessId)) return null;
   const business = await BusinessModel.findById(businessId)
@@ -147,7 +127,6 @@ export async function getBusinessAccess(businessId: string): Promise<BusinessAcc
   return resolveBusinessAccess(business);
 }
 
-/** El negocio sale SIEMPRE del contexto verificado, nunca de params ni del body. */
 export async function getBusiness(ctx: TenantContext): Promise<BusinessWithRole> {
   const business = await BusinessModel.findById(ctx.businessId);
   if (!business) throw AppError.notFound();

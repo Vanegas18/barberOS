@@ -26,14 +26,16 @@ export async function login(req: Request, res: Response): Promise<void> {
 
 export async function refresh(req: Request, res: Response): Promise<void> {
   const token = readRefreshToken(req);
-  if (!token) throw AppError.unauthorized("Sesión inválida");
+  if (!token) {
+    clearAuthCookies(res);
+    throw AppError.unauthorized("Sesión inválida");
+  }
 
   try {
     const tokens = await refreshSession(token, req.get("user-agent"));
     setAuthCookies(res, tokens);
     res.status(204).end();
   } catch (err) {
-    // Si la sesión no sirve, también limpiamos las cookies del navegador.
     if (err instanceof AppError && err.status === 401) clearAuthCookies(res);
     throw err;
   }

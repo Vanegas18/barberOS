@@ -1,11 +1,16 @@
 "use client";
 
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryCache, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
 import { ApiError } from "@/lib/api/client";
 
 function makeQueryClient() {
   return new QueryClient({
+    queryCache: new QueryCache({
+      onError: (error) => {
+        if (error instanceof ApiError && error.status === 401) window.location.replace("/ingresar");
+      },
+    }),
     defaultOptions: {
       queries: {
         staleTime: 30_000,
