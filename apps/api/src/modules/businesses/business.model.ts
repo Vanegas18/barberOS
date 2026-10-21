@@ -1,12 +1,14 @@
 import mongoose, { Schema } from "mongoose";
-import { SUPPORTED_CURRENCIES } from "@barberos/contracts";
-import type { Currency } from "@barberos/contracts";
+import { BUSINESS_STATUSES, SUPPORTED_CURRENCIES } from "@barberos/contracts";
+import type { BusinessStatus, Currency } from "@barberos/contracts";
 
 export interface BusinessDoc {
   name: string;
   slug: string;
   currency: Currency;
   timezone: string;
+  status: BusinessStatus;
+  trialEndsAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -18,6 +20,8 @@ const businessSchema = new Schema<BusinessDoc>(
     slug: { type: String, required: true, trim: true, lowercase: true, maxlength: 40 },
     currency: { type: String, enum: SUPPORTED_CURRENCIES, required: true },
     timezone: { type: String, required: true },
+    status: { type: String, enum: BUSINESS_STATUSES, required: true, default: "active" },
+    trialEndsAt: { type: Date, default: null },
   },
   { timestamps: true },
 );

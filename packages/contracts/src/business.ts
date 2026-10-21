@@ -52,9 +52,20 @@ function isValidTimeZone(value: string): boolean {
 
 export const timezoneSchema = z.string().refine(isValidTimeZone, "Zona horaria inválida");
 
+/**
+ * Código emitido por la plataforma (ej. BRB-7K2M-Q9XD-4F8T). Aquí solo se valida la forma
+ * general; la API lo normaliza (mayúsculas, sin guiones ni espacios) y lo verifica.
+ */
+export const activationCodeSchema = z
+  .string()
+  .trim()
+  .min(1, "Ingresa el código de activación")
+  .max(40, "Código de activación inválido");
+
 export const createBusinessSchema = z.object({
   name: z.string().trim().min(2, "Nombre demasiado corto").max(80),
   slug: slugSchema,
+  activationCode: activationCodeSchema,
   currency: currencySchema.default("COP"),
   timezone: timezoneSchema.default("America/Bogota"),
 });

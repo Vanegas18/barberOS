@@ -1,13 +1,23 @@
 import { Types } from "mongoose";
-import type { CreateBusinessInput, Role, UpdateBusinessInput } from "@barberos/contracts";
+import type {
+  BusinessAccess,
+  BusinessStatus,
+  CreateBusinessInput,
+  Role,
+  UpdateBusinessInput,
+} from "@barberos/contracts";
 import { withTransaction } from "../../shared/db/transaction.js";
 import { AppError } from "../../shared/errors/app-error.js";
+import type { TenantContext } from "../../shared/middleware/require-permission.js";
+import { consumeActivationCode } from "../activation-codes/activation-code.service.js";
 import {
   createOwnerMembership,
+  isObjectIdString,
   listActiveMembershipsForUser,
 } from "../memberships/membership.service.js";
 import { BusinessModel } from "./business.model.js";
-import type { TenantContext } from "../../shared/middleware/require-permission.js";
+
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 export interface BusinessSummary {
   id: string;
@@ -15,25 +25,50 @@ export interface BusinessSummary {
   slug: string;
   currency: string;
   timezone: string;
+  status: BusinessStatus;
+  trialEndsAt: string | null;
+  access: BusinessAccess;
 }
 
 export interface BusinessWithRole extends BusinessSummary {
   role: Role;
 }
 
-function toSummary(b: {
-  _id: { toString(): string };
-  name: string;
-  slug: string;
-  currency: string;
-  timezone: string;
-}): BusinessSummary {
+interface AccessFields {
+  status?: BusinessStatus | null;
+  trialEndsAt?: Date | null;
+}
+
+/**
+ * Acceso efectivo al panel. La prueba vence sola por fecha (sin tareas programadas).
+ * Un documento antiguo sin `status` se trata como activo.
+ */
+export function resolveBusinessAccess(b: AccessFields, now: Date = new Date()): BusinessAccess {
+  if (b.status === "suspended") return "suspended";
+  if (b.status === "trial" && (!b.trialEndsAt || b.trialEndsAt.getTime() <= now.getTime())) {
+    return "trial_expired";
+  }
+  return "ok";
+}
+
+function toSummary(
+  b: AccessFields & {
+    _id: { toString(): string };
+    name: string;
+    slug: string;
+    currency: string;
+    timezone: string;
+  },
+): BusinessSummary {
   return {
     id: b._id.toString(),
     name: b.name,
     slug: b.slug,
     currency: b.currency,
     timezone: b.timezone,
+    status: b.status ?? "active",
+    trialEndsAt: b.trialEndsAt ? b.trialEndsAt.toISOString() : null,
+    access: resolveBusinessAccess(b),
   };
 }
 
@@ -45,15 +80,28 @@ export async function createBusiness(
   userId: string,
   input: CreateBusinessInput,
 ): Promise<BusinessWithRole> {
+  // El _id se genera antes para que el código registre a qué negocio se aplicó.
+  const businessId = new Types.ObjectId();
+
   try {
     return await withTransaction(async (session) => {
+      // Primero el código: si no es válido, no se intenta nada más.
+      const { trialDays } = await consumeActivationCode(
+        input.activationCode,
+        { userId, businessId: businessId.toString() },
+        session,
+      );
+
       const [business] = await BusinessModel.create(
         [
           {
+            _id: businessId,
             name: input.name,
             slug: input.slug,
             currency: input.currency,
             timezone: input.timezone,
+            status: trialDays > 0 ? "trial" : "active",
+            trialEndsAt: trialDays > 0 ? new Date(Date.now() + trialDays * DAY_MS) : null,
           },
         ],
         { session },
@@ -87,6 +135,16 @@ export async function listBusinessesForUser(userId: string): Promise<BusinessWit
     if (business) result.push({ ...toSummary(business), role: m.role });
   }
   return result.sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/** Acceso efectivo de un negocio, o null si no existe. Lo usa tenantContext. */
+export async function getBusinessAccess(businessId: string): Promise<BusinessAccess | null> {
+  if (!isObjectIdString(businessId)) return null;
+  const business = await BusinessModel.findById(businessId)
+    .select({ status: 1, trialEndsAt: 1 })
+    .lean();
+  if (!business) return null;
+  return resolveBusinessAccess(business);
 }
 
 /** El negocio sale SIEMPRE del contexto verificado, nunca de params ni del body. */

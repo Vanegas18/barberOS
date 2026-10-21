@@ -23,7 +23,11 @@ describe("slugify", () => {
 });
 
 describe("createBusinessSchema", () => {
-  const base = { name: "Barbería Central", slug: "barberia-central" };
+  const base = {
+    name: "Barbería Central",
+    slug: "barberia-central",
+    activationCode: "BRB-7K2M-Q9XD-4F8T",
+  };
 
   it("aplica moneda y zona horaria por defecto", () => {
     const parsed = createBusinessSchema.parse(base);

@@ -4,6 +4,8 @@ import request from "supertest";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type { MembershipStatus, Role } from "@barberos/contracts";
 import { createApp } from "./app.js";
+import { ActivationCodeModel } from "./modules/activation-codes/activation-code.model.js";
+import { issueActivationCode } from "./modules/activation-codes/activation-code.service.js";
 import { SessionModel } from "./modules/auth/session.model.js";
 import { UserModel } from "./modules/auth/user.model.js";
 import { BusinessModel } from "./modules/businesses/business.model.js";
@@ -33,11 +35,13 @@ async function signUp(email: string): Promise<Actor> {
   return { cookie: accessCookie(res), userId: res.body.user.id as string };
 }
 
+const activationCode = async () => (await issueActivationCode({ label: "Prueba" })).code;
+
 async function createBusinessAs(actor: Actor, slug: string): Promise<string> {
   const res = await request(app)
     .post("/api/v1/businesses")
     .set("Cookie", actor.cookie)
-    .send({ name: `Barbería ${slug}`, slug });
+    .send({ name: `Barbería ${slug}`, slug, activationCode: await activationCode() });
   expect(res.status).toBe(201);
   return res.body.business.id as string;
 }
@@ -77,6 +81,7 @@ beforeAll(async () => {
   await SessionModel.init();
   await BusinessModel.init();
   await MembershipModel.init();
+  await ActivationCodeModel.init();
 });
 
 afterAll(async () => {
@@ -89,6 +94,7 @@ beforeEach(async () => {
   await SessionModel.deleteMany({});
   await BusinessModel.deleteMany({});
   await MembershipModel.deleteMany({}).setOptions({ skipTenantCheck: true });
+  await ActivationCodeModel.deleteMany({});
 
   ana = await signUp("ana@ejemplo.com");
   beto = await signUp("beto@ejemplo.com");
@@ -181,6 +187,52 @@ describe("Roles dentro de un negocio", () => {
     );
 
     expect((await api.get(`/businesses/${anaBiz}`, beto)).status).toBe(404);
+  });
+});
+
+describe("Estado del negocio", () => {
+  it("suspender el negocio corta el acceso de todos sus miembros con el mismo token", async () => {
+    await addMember(anaBiz, beto.userId, "barber");
+    expect((await api.get(`/businesses/${anaBiz}`, ana)).status).toBe(200);
+
+    await BusinessModel.updateOne({ _id: anaBiz }, { $set: { status: "suspended" } });
+
+    for (const actor of [ana, beto]) {
+      const res = await api.get(`/businesses/${anaBiz}`, actor);
+      expect(res.status).toBe(403);
+      expect(res.body.error.code).toBe("BUSINESS_SUSPENDED");
+    }
+    // El negocio del otro owner no se ve afectado.
+    expect((await api.get(`/businesses/${betoBiz}`, beto)).status).toBe(200);
+  });
+
+  it("un no miembro sigue recibiendo 404: la suspensión no revela que el negocio existe", async () => {
+    await BusinessModel.updateOne({ _id: anaBiz }, { $set: { status: "suspended" } });
+    const res = await api.get(`/businesses/${anaBiz}`, beto);
+    expect(res.status).toBe(404);
+  });
+
+  it("una prueba vencida bloquea con TRIAL_EXPIRED y una vigente deja pasar", async () => {
+    const future = new Date(Date.now() + 86_400_000);
+    await BusinessModel.updateOne(
+      { _id: anaBiz },
+      { $set: { status: "trial", trialEndsAt: future } },
+    );
+    expect((await api.get(`/businesses/${anaBiz}`, ana)).status).toBe(200);
+
+    const past = new Date(Date.now() - 1000);
+    await BusinessModel.updateOne({ _id: anaBiz }, { $set: { trialEndsAt: past } });
+    const res = await api.get(`/businesses/${anaBiz}`, ana);
+    expect(res.status).toBe(403);
+    expect(res.body.error.code).toBe("TRIAL_EXPIRED");
+  });
+
+  it("un negocio suspendido tampoco se puede editar", async () => {
+    await BusinessModel.updateOne({ _id: anaBiz }, { $set: { status: "suspended" } });
+    const res = await api.patch(`/businesses/${anaBiz}`, ana, { name: "Cambio" });
+    expect(res.status).toBe(403);
+    const doc = await BusinessModel.findById(anaBiz).lean();
+    expect(doc?.name).toBe("Barbería barberia-ana");
   });
 });
 

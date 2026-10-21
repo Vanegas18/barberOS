@@ -31,6 +31,16 @@ export const authLimiter = rateLimit({
   skip,
 });
 
+/** Crear negocio exige un código de activación: se limita para impedir probar códigos al azar. */
+export const activationLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+  message: tooMany,
+  skip,
+});
+
 /** Fábrica para probar el comportamiento del límite con valores pequeños. */
 export function createLimiter(limit: number) {
   return rateLimit({

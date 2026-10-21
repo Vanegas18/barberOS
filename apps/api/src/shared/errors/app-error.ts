@@ -1,12 +1,6 @@
-export type ErrorCode =
-  | "BAD_REQUEST"
-  | "VALIDATION_ERROR"
-  | "UNAUTHORIZED"
-  | "FORBIDDEN"
-  | "NOT_FOUND"
-  | "CONFLICT"
-  | "TOO_MANY_REQUESTS"
-  | "INTERNAL_ERROR";
+import type { ApiErrorCode } from "@barberos/contracts";
+
+export type ErrorCode = ApiErrorCode;
 
 export class AppError extends Error {
   readonly status: number;

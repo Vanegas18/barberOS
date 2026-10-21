@@ -10,7 +10,7 @@ import cors from "cors";
 import helmet from "helmet";
 import { env } from "./config/env.js";
 import { originCheck } from "./shared/middleware/origin-check.js";
-import { apiLimiter, authLimiter } from "./shared/middleware/rate-limit.js";
+import { apiLimiter, authLimiter, activationLimiter } from "./shared/middleware/rate-limit.js";
 import {
   businessRouter,
   meRouter,
@@ -34,6 +34,7 @@ export function createApp() {
   app.use("/api/v1/auth/login", authLimiter);
   app.use("/api/v1/auth/register", authLimiter);
   app.use("/api/v1/auth", authRouter);
+  app.post("/api/v1/businesses", activationLimiter);
   app.use("/api/v1/businesses", businessRouter);
   app.use("/api/v1/me", meRouter);
   // Todas las rutas privadas de un negocio cuelgan de aquí y heredan la protección.
