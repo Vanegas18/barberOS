@@ -30,12 +30,16 @@ export function LoginForm() {
       await login.mutateAsync(values);
       router.replace("/inicio");
     } catch (err) {
-      setError("root", { message: errorMessage(err, { 401: "Correo o contraseña incorrectos." }) });
+      setError("root", {
+        message: errorMessage(err, {
+          401: "Correo o contraseña incorrectos. Revisa los dos e inténtalo de nuevo.",
+        }),
+      });
     }
   });
 
   return (
-    <form onSubmit={onSubmit} noValidate className="flex flex-col gap-5">
+    <form onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
       <FormAlert message={errors.root?.message} />
 
       <Field data-invalid={errors.email ? true : undefined}>
@@ -45,7 +49,7 @@ export function LoginForm() {
           type="email"
           inputMode="email"
           autoComplete="email"
-          className="h-11"
+          className="h-12 lg:h-11"
           aria-invalid={errors.email ? true : undefined}
           {...register("email")}
         />
@@ -56,6 +60,7 @@ export function LoginForm() {
         <FieldLabel htmlFor="password">Contraseña</FieldLabel>
         <PasswordInput
           id="password"
+          className="h-12 lg:h-11"
           autoComplete="current-password"
           aria-invalid={errors.password ? true : undefined}
           {...register("password")}
@@ -63,7 +68,13 @@ export function LoginForm() {
         <FieldError>{errors.password?.message}</FieldError>
       </Field>
 
-      <Button type="submit" className="h-11 w-full text-base" disabled={isSubmitting}>
+      <Button
+        type="submit"
+        size="lg"
+        className="mt-2 w-full"
+        disabled={isSubmitting}
+        aria-busy={isSubmitting}
+      >
         {isSubmitting ? "Ingresando…" : "Ingresar"}
       </Button>
     </form>

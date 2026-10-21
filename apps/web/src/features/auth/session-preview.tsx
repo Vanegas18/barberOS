@@ -28,18 +28,13 @@ export function SessionPreview() {
   if (me.isError) return <FormAlert message={errorMessage(me.error)} />;
 
   return (
-    <section className="flex flex-col gap-5 rounded-2xl border border-line bg-surface p-6">
+    <section className="flex flex-col gap-5 rounded-lg border border-line bg-surface p-6">
       <div className="flex flex-col gap-1">
         <p className="text-sm text-ink-muted">Sesión iniciada como</p>
         <p className="text-xl font-semibold">{me.data.name}</p>
         <p className="text-sm text-ink-muted">{me.data.email}</p>
       </div>
-      <Button
-        variant="outline"
-        className="h-11"
-        disabled={logout.isPending}
-        onClick={() => logout.mutate()}
-      >
+      <Button variant="secondary" disabled={logout.isPending} onClick={() => logout.mutate()}>
         {logout.isPending ? "Cerrando sesión…" : "Cerrar sesión"}
       </Button>
     </section>

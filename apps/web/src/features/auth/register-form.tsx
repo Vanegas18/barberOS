@@ -39,7 +39,7 @@ export function RegisterForm() {
   });
 
   return (
-    <form onSubmit={onSubmit} noValidate className="flex flex-col gap-5">
+    <form onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
       <FormAlert message={errors.root?.message} />
 
       <Field data-invalid={errors.name ? true : undefined}>
@@ -47,7 +47,7 @@ export function RegisterForm() {
         <Input
           id="name"
           autoComplete="name"
-          className="h-11"
+          className="h-12 lg:h-11"
           aria-invalid={errors.name ? true : undefined}
           {...register("name")}
         />
@@ -61,7 +61,7 @@ export function RegisterForm() {
           type="email"
           inputMode="email"
           autoComplete="email"
-          className="h-11"
+          className="h-12 lg:h-11"
           aria-invalid={errors.email ? true : undefined}
           {...register("email")}
         />
@@ -72,6 +72,7 @@ export function RegisterForm() {
         <FieldLabel htmlFor="password">Contraseña</FieldLabel>
         <PasswordInput
           id="password"
+          className="h-12 lg:h-11"
           autoComplete="new-password"
           aria-invalid={errors.password ? true : undefined}
           aria-describedby="password-hint"
@@ -81,7 +82,13 @@ export function RegisterForm() {
         <FieldError>{errors.password?.message}</FieldError>
       </Field>
 
-      <Button type="submit" className="h-11 w-full text-base" disabled={isSubmitting}>
+      <Button
+        type="submit"
+        size="lg"
+        className="mt-2 w-full"
+        disabled={isSubmitting}
+        aria-busy={isSubmitting}
+      >
         {isSubmitting ? "Creando cuenta…" : "Crear cuenta"}
       </Button>
     </form>

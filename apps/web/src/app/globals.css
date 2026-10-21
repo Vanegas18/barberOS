@@ -2,79 +2,81 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-/* Paleta cerrada: solo existen los colores de BarberOS. */
 @theme {
   --color-*: initial;
   --color-white: #ffffff;
   --color-black: #000000;
 
-  /* Neutros */
-  --color-ink: #0f1b2d;
-  --color-ink-soft: #3d4757;
-  --color-ink-muted: #5b6577;
-  --color-line: #e4e7ec;
-  --color-line-soft: #eef0f3;
-  --color-surface: #ffffff;
-  --color-canvas: #f7f8fa;
+  /* Superficies */
+  --color-ground: #f4f4f4; /* fondo de la app */
+  --color-surface: #ffffff; /* tarjetas, listas, inputs */
+  --color-sunken: #eeeeee; /* atendidas, pistas de progreso, skeleton */
 
-  /* Azul: acciones, selección y foco */
-  --color-brand: #1f3c88;
-  --color-brand-hover: #152b66;
-  --color-brand-soft: #eef2fc;
-  --color-brand-tint: #dce4f8;
-  --color-brand-line: #c9d5f3;
+  /* Bordes */
+  --color-line: #e3e3e3; /* borde de tarjetas */
+  --color-line-soft: #efefef; /* separadores de filas */
+  --color-line-strong: #bdbdbd; /* cita confirmada, vacíos punteados */
+  --color-control: #8a8a8a; /* inputs y botones secundarios: 3.45:1 */
 
-  /* Rojo barbero: marca, "ahora", errores y "no asistió". Nunca en botones normales. */
-  --color-pole: #c8102e;
-  --color-pole-ink: #a40e26;
-  --color-pole-soft: #fbe3e7;
-  --color-pole-line: #e8a5af;
+  /* Texto y acción principal */
+  --color-ink: #141414; /* texto, botón primario, En silla, Ahora */
+  --color-ink-hover: #2e2e2e;
+  --color-ink-soft: #3d3d3d;
+  --color-ink-muted: #595959;
 
-  /* Estados de cita */
-  --color-done: #3d4757;
-  --color-done-soft: #f3f4f6;
-  --color-done-tint: #e7eaef;
-  --color-done-line: #e2e5ea;
+  /* Marca: amarillo de letrero. Nunca como texto sobre blanco. */
+  --color-brand: #ffd23f;
+  --color-brand-hover: #f5c518;
+  --color-brand-soft: #fff4c2; /* huecos libres, Por confirmar, avisos */
+  --color-brand-ink: #5c4500; /* texto sobre brand-soft */
+  --color-pending-line: #8a6a00; /* borde punteado de Por confirmar */
 
-  --color-live: #146c3a;
-  --color-live-soft: #ecf7f0;
-  --color-live-tint: #d6efdf;
-  --color-live-line: #bfe3cc;
+  /* Señales */
+  --color-danger: #b3261e;
+  --color-danger-soft: #fdecea;
+  --color-success: #0b7a4b;
+  --color-success-soft: #e3f4ea;
 
-  --color-pending: #8a5300;
-  --color-pending-soft: #fff7ea;
-  --color-pending-tint: #fbe9c8;
-  --color-pending-line: #f3d9a8;
+  --color-person-a: #f6e7b0;
+  --color-person-b: #dde7f0;
+  --color-person-c: #e1eee3;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 24px;
+
+  --shadow-float: 0 12px 32px rgb(20 20 20 / 0.14);
+
+  --ease-snap: cubic-bezier(0.2, 0, 0, 1);
 }
 
-/* Variables semánticas que usan los componentes de shadcn, apuntando a la paleta. */
+/* Variables semánticas de shadcn apuntando a la paleta. */
 :root {
-  --radius: 0.625rem;
+  --radius: 12px;
 
-  --background: #f7f8fa;
-  --foreground: #0f1b2d;
+  --background: #f4f4f4;
+  --foreground: #141414;
   --card: #ffffff;
-  --card-foreground: #0f1b2d;
+  --card-foreground: #141414;
   --popover: #ffffff;
-  --popover-foreground: #0f1b2d;
-  --primary: #1f3c88;
+  --popover-foreground: #141414;
+  --primary: #141414;
   --primary-foreground: #ffffff;
-  --secondary: #eef2fc;
-  --secondary-foreground: #1f3c88;
-  --muted: #eef0f3;
-  --muted-foreground: #5b6577;
-  --accent: #eef2fc;
-  --accent-foreground: #1f3c88;
-  --destructive: #c8102e;
-  --border: #e4e7ec;
-  /* Borde de inputs con contraste 3:1 sobre blanco (WCAG para controles). */
-  --input: #8a93a3;
-  --ring: #1f3c88;
+  --secondary: #fff4c2;
+  --secondary-foreground: #5c4500;
+  --muted: #eeeeee;
+  --muted-foreground: #595959;
+  --accent: #eeeeee;
+  --accent-foreground: #141414;
+  --destructive: #b3261e;
+  --border: #e3e3e3;
+  --input: #8a8a8a;
+  --ring: #141414;
 }
 
 @theme inline {
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-sans: var(--font-schibsted), ui-sans-serif, system-ui, sans-serif;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -94,32 +96,32 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-}
-
-/* Franja de poste de barbería: logo y borde superior. */
-@utility barber-pole {
-  background-image: repeating-linear-gradient(
-    135deg,
-    var(--color-pole) 0 10px,
-    var(--color-white) 10px 16px,
-    var(--color-brand) 16px 26px,
-    var(--color-white) 26px 32px
-  );
 }
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
   }
   html {
     color-scheme: light;
   }
   body {
     @apply bg-background font-sans text-foreground antialiased;
+    font-variant-numeric: tabular-nums;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-ink);
+    outline-offset: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

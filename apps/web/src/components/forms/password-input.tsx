@@ -11,22 +11,18 @@ export function PasswordInput({ className, ...props }: Props) {
   const [visible, setVisible] = useState(false);
   return (
     <div className="relative">
-      <Input
-        {...props}
-        type={visible ? "text" : "password"}
-        className={cn("h-11 pr-12", className)}
-      />
+      <Input {...props} type={visible ? "text" : "password"} className={cn("pr-12", className)} />
       <button
         type="button"
         onClick={() => setVisible((v) => !v)}
         aria-label={visible ? "Ocultar contraseña" : "Mostrar contraseña"}
         aria-pressed={visible}
-        className="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-r-md text-ink-muted hover:text-ink focus-visible:outline-2 focus-visible:outline-ring"
+        className="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-r-md text-ink-soft transition-colors duration-150 hover:text-ink"
       >
         {visible ? (
-          <EyeOff className="size-5" aria-hidden="true" />
+          <EyeOff className="size-[18px]" aria-hidden="true" />
         ) : (
-          <Eye className="size-5" aria-hidden="true" />
+          <Eye className="size-[18px]" aria-hidden="true" />
         )}
       </button>
     </div>

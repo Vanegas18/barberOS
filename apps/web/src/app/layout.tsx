@@ -1,26 +1,25 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Schibsted_Grotesk } from "next/font/google";
 import { Providers } from "./providers";
 import "./globals.css";
 
-const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
-const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
+const schibsted = Schibsted_Grotesk({ variable: "--font-schibsted", subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: { default: "BarberOS", template: "%s · BarberOS" },
-  description: "Agenda, ventas, comisiones y caja para barberías.",
+  description: "La agenda, las sillas y la caja de tu barbería, en orden.",
   applicationName: "BarberOS",
 };
 
 export const viewport: Viewport = {
-  themeColor: "#ffffff",
+  themeColor: "#ffd23f",
   colorScheme: "light",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
-    <html lang="es-CO" className={`${geistSans.variable} ${geistMono.variable}`}>
+    <html lang="es-CO" className={schibsted.variable}>
       <body>
         <Providers>{children}</Providers>
       </body>
