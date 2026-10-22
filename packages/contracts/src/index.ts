@@ -5,3 +5,5 @@ export * from "./auth.ts";
 export * from "./business.ts";
 export * from "./errors.ts";
 export * from "./services.ts";
+export * from "./phone.ts";
+export * from "./employees.ts";

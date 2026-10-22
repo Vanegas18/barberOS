@@ -9,6 +9,7 @@ export const PERMISSIONS = [
   "services:manage",
   "employees:read",
   "employees:manage",
+  "earnings:configure",
   "customers:read",
   "customers:manage",
   "appointments:read",
