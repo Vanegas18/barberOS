@@ -18,6 +18,7 @@ import {
 } from "./modules/businesses/business.routes.js";
 import { authenticate } from "./modules/auth/authenticate.middleware.js";
 import { tenantContext } from "./modules/memberships/tenant-context.middleware.js";
+import { serviceRouter } from "./modules/services/service.routes.js";
 
 export function createApp() {
   const app = express();
@@ -39,6 +40,7 @@ export function createApp() {
   app.use("/api/v1/me", meRouter);
   // Todas las rutas privadas de un negocio cuelgan de aquí y heredan la protección.
   const tenantRouter = Router({ mergeParams: true });
+  tenantRouter.use("/services", serviceRouter);
   tenantRouter.use("/", businessTenantRouter);
 
   app.use("/api/v1/businesses/:businessId", authenticate, tenantContext, tenantRouter);
