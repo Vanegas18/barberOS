@@ -1,9 +1,12 @@
 import { Types } from "mongoose";
+import { DEFAULT_WEEKLY_SCHEDULE, WEEKDAYS } from "@barberos/contracts";
 import type {
   CreateEmployeeInput,
   EarningRule,
   Employee,
   UpdateEmployeeInput,
+  WeeklySchedule,
+  Workday,
 } from "@barberos/contracts";
 import { AppError } from "../../shared/errors/app-error.js";
 import type { TenantContext } from "../../shared/middleware/require-permission.js";
@@ -31,6 +34,25 @@ function toRule(doc: EarningRuleDoc): EarningRule {
   return { type: "none" };
 }
 
+/** Copia limpia (sin _id ni metadatos de Mongoose); un empleado antiguo sin horario usa el de base. */
+export function toWeeklySchedule(doc: WeeklySchedule | null | undefined): WeeklySchedule {
+  const source = doc ?? DEFAULT_WEEKLY_SCHEDULE;
+  return Object.fromEntries(
+    WEEKDAYS.map((day) => [day, toWorkday(source[day] ?? null)]),
+  ) as WeeklySchedule;
+}
+
+export function toWorkday(day: Workday | null): Workday | null {
+  if (!day) return null;
+  return {
+    start: day.start,
+    end: day.end,
+    lunch: day.lunch
+      ? { start: day.lunch.start, durationMinutes: day.lunch.durationMinutes }
+      : null,
+  };
+}
+
 function toEmployee(doc: EmployeeDoc & { _id: Types.ObjectId }, ctx: TenantContext): Employee {
   return {
     id: doc._id.toString(),
@@ -41,6 +63,7 @@ function toEmployee(doc: EmployeeDoc & { _id: Types.ObjectId }, ctx: TenantConte
     active: doc.active,
     hasAccount: doc.membershipId !== null && doc.membershipId !== undefined,
     isMe: doc.membershipId?.toString() === ctx.membershipId,
+    weeklySchedule: toWeeklySchedule(doc.weeklySchedule),
     createdAt: doc.createdAt.toISOString(),
     updatedAt: doc.updatedAt.toISOString(),
   };
@@ -110,6 +133,7 @@ export async function createEmployee(
       membershipId: input.linkSelf ? new Types.ObjectId(ctx.membershipId) : null,
       earningRule: toRuleDoc(input.earningRule ?? { type: "none" }),
       acceptsOnlineBookings: input.acceptsOnlineBookings,
+      weeklySchedule: input.weeklySchedule ?? DEFAULT_WEEKLY_SCHEDULE,
     });
     return toEmployee(doc.toObject(), ctx);
   } catch (err) {
@@ -147,4 +171,35 @@ export async function updateEmployee(
   } catch (err) {
     throw conflictFrom(err) ?? err;
   }
+}
+
+export async function setWeeklySchedule(
+  ctx: TenantContext,
+  employeeId: string,
+  weeklySchedule: WeeklySchedule,
+): Promise<Employee> {
+  if (!isObjectIdString(employeeId)) throw notFound();
+  const doc = await EmployeeModel.findOneAndUpdate(
+    { ...scope(ctx), _id: new Types.ObjectId(employeeId) },
+    { $set: { weeklySchedule } },
+    { returnDocument: "after", runValidators: true },
+  ).lean();
+  if (!doc) throw notFound();
+  return toEmployee(doc, ctx);
+}
+
+export async function findEmployeeRef(
+  ctx: TenantContext,
+  employeeId: string,
+): Promise<{ id: string; isMe: boolean; weeklySchedule: WeeklySchedule } | null> {
+  if (!isObjectIdString(employeeId)) return null;
+  const doc = await EmployeeModel.findOne({ ...scope(ctx), _id: new Types.ObjectId(employeeId) })
+    .select({ membershipId: 1, weeklySchedule: 1 })
+    .lean();
+  if (!doc) return null;
+  return {
+    id: doc._id.toString(),
+    isMe: doc.membershipId?.toString() === ctx.membershipId,
+    weeklySchedule: toWeeklySchedule(doc.weeklySchedule),
+  };
 }

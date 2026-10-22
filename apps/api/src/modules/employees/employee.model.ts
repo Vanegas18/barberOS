@@ -1,4 +1,6 @@
 import mongoose, { Schema, Types } from "mongoose";
+import { DEFAULT_WEEKLY_SCHEDULE, WEEKDAYS } from "@barberos/contracts";
+import type { WeeklySchedule } from "@barberos/contracts";
 import { tenantPlugin } from "../../shared/db/tenant-plugin.js";
 
 export const EARNING_RULE_TYPES = ["percentage", "fixed", "none"] as const;
@@ -18,6 +20,7 @@ export interface EmployeeDoc {
   earningRule: EarningRuleDoc;
   acceptsOnlineBookings: boolean;
   active: boolean;
+  weeklySchedule: WeeklySchedule;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -31,6 +34,28 @@ const earningRuleSchema = new Schema<EarningRuleDoc>(
   { _id: false },
 );
 
+const lunchSchema = new Schema(
+  {
+    start: { type: String, required: true },
+    durationMinutes: { type: Number, required: true },
+  },
+  { _id: false },
+);
+
+const workdaySchema = new Schema(
+  {
+    start: { type: String, required: true },
+    end: { type: String, required: true },
+    lunch: { type: lunchSchema, default: null },
+  },
+  { _id: false },
+);
+
+const weeklyScheduleSchema = new Schema(
+  Object.fromEntries(WEEKDAYS.map((day) => [day, { type: workdaySchema, default: null }])),
+  { _id: false },
+);
+
 const employeeSchema = new Schema<EmployeeDoc>(
   {
     displayName: { type: String, required: true, trim: true, maxlength: 40 },
@@ -40,6 +65,11 @@ const employeeSchema = new Schema<EmployeeDoc>(
     earningRule: { type: earningRuleSchema, required: true, default: () => ({ type: "none" }) },
     acceptsOnlineBookings: { type: Boolean, required: true, default: true },
     active: { type: Boolean, required: true, default: true },
+    weeklySchedule: {
+      type: weeklyScheduleSchema,
+      required: true,
+      default: () => structuredClone(DEFAULT_WEEKLY_SCHEDULE),
+    },
   },
   { timestamps: true },
 );

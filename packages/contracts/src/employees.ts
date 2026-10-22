@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { optionalPhoneSchema } from "./phone.ts";
+import { weeklyScheduleSchema, type WeeklySchedule } from "./schedule.ts";
 
 export const EARNING_MAX_FIXED_AMOUNT = 10_000_000;
 
@@ -36,6 +37,7 @@ export const createEmployeeSchema = z.object({
   earningRule: earningRuleSchema.optional(),
   acceptsOnlineBookings: z.boolean().default(true),
   linkSelf: z.boolean().default(false),
+  weeklySchedule: weeklyScheduleSchema.optional(),
 });
 export type CreateEmployeeInput = z.infer<typeof createEmployeeSchema>;
 
@@ -59,6 +61,7 @@ export interface Employee {
   active: boolean;
   hasAccount: boolean;
   isMe: boolean;
+  weeklySchedule: WeeklySchedule;
   createdAt: string;
   updatedAt: string;
 }
