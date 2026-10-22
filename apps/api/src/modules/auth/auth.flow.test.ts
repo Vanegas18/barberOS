@@ -1,12 +1,10 @@
-import mongoose from "mongoose";
-import { MongoMemoryReplSet } from "mongodb-memory-server";
 import request from "supertest";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
+import { useTestDatabase } from "../../../tests/db.js";
 import { createApp } from "../../app.js";
 import { SessionModel } from "./session.model.js";
 import { UserModel } from "./user.model.js";
 
-let replSet: MongoMemoryReplSet;
 const app = createApp();
 
 const credentials = {
@@ -17,7 +15,6 @@ const credentials = {
 
 type WithHeaders = { headers: Record<string, unknown> };
 
-/** Devuelve "nombre=valor" de una cookie Set-Cookie, listo para reenviar en el header Cookie. */
 function cookiePair(res: WithHeaders, name: string): string {
   const cookies = (res.headers["set-cookie"] ?? []) as string[];
   const found = cookies.find((c) => c.startsWith(`${name}=`));
@@ -30,17 +27,7 @@ const login = (body: object) => request(app).post("/api/v1/auth/login").send(bod
 const refreshWith = (cookie: string) =>
   request(app).post("/api/v1/auth/refresh").set("Cookie", cookie);
 
-beforeAll(async () => {
-  replSet = await MongoMemoryReplSet.create({ replSet: { count: 1 } });
-  await mongoose.connect(replSet.getUri());
-  await UserModel.init();
-  await SessionModel.init();
-});
-
-afterAll(async () => {
-  await mongoose.disconnect();
-  await replSet.stop();
-});
+useTestDatabase();
 
 beforeEach(async () => {
   await UserModel.deleteMany({});

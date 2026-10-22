@@ -1,6 +1,6 @@
-import mongoose, { Types } from "mongoose";
-import { MongoMemoryReplSet } from "mongodb-memory-server";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { Types } from "mongoose";
+import { beforeEach, describe, expect, it } from "vitest";
+import { useTestDatabase } from "../../../tests/db.js";
 import { withTransaction } from "../../shared/db/transaction.js";
 import { ActivationCodeModel } from "./activation-code.model.js";
 import {
@@ -35,18 +35,7 @@ describe("normalizeActivationCode", () => {
 });
 
 describe("emisión y consumo", () => {
-  let replSet: MongoMemoryReplSet;
-
-  beforeAll(async () => {
-    replSet = await MongoMemoryReplSet.create({ replSet: { count: 1 } });
-    await mongoose.connect(replSet.getUri());
-    await ActivationCodeModel.init();
-  });
-
-  afterAll(async () => {
-    await mongoose.disconnect();
-    await replSet.stop();
-  });
+  useTestDatabase();
 
   beforeEach(async () => {
     await ActivationCodeModel.deleteMany({});

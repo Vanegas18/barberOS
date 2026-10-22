@@ -1,26 +1,13 @@
-import mongoose, { Types } from "mongoose";
-import { MongoMemoryReplSet } from "mongodb-memory-server";
-import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { Types } from "mongoose";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { useTestDatabase } from "../../../tests/db.js";
 import { ActivationCodeModel } from "../activation-codes/activation-code.model.js";
 import { issueActivationCode } from "../activation-codes/activation-code.service.js";
 import { MembershipModel } from "../memberships/membership.model.js";
 import { BusinessModel } from "./business.model.js";
 import { createBusiness } from "./business.service.js";
 
-let replSet: MongoMemoryReplSet;
-
-beforeAll(async () => {
-  replSet = await MongoMemoryReplSet.create({ replSet: { count: 1 } });
-  await mongoose.connect(replSet.getUri());
-  await BusinessModel.init();
-  await MembershipModel.init();
-  await ActivationCodeModel.init();
-});
-
-afterAll(async () => {
-  await mongoose.disconnect();
-  await replSet.stop();
-});
+useTestDatabase();
 
 afterEach(() => {
   vi.restoreAllMocks();

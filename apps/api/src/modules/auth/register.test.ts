@@ -1,12 +1,10 @@
-import mongoose from "mongoose";
-import { MongoMemoryReplSet } from "mongodb-memory-server";
 import request from "supertest";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
+import { useTestDatabase } from "../../../tests/db.js";
 import { createApp } from "../../app.js";
 import { SessionModel } from "./session.model.js";
 import { UserModel } from "./user.model.js";
 
-let replSet: MongoMemoryReplSet;
 const app = createApp();
 
 const validBody = {
@@ -15,17 +13,7 @@ const validBody = {
   password: "una-clave-segura-123",
 };
 
-beforeAll(async () => {
-  replSet = await MongoMemoryReplSet.create({ replSet: { count: 1 } });
-  await mongoose.connect(replSet.getUri());
-  await UserModel.init();
-  await SessionModel.init();
-});
-
-afterAll(async () => {
-  await mongoose.disconnect();
-  await replSet.stop();
-});
+useTestDatabase();
 
 beforeEach(async () => {
   await UserModel.deleteMany({});
@@ -41,12 +29,13 @@ describe("POST /api/v1/auth/register", () => {
     expect(res.body.user.id).toBeTypeOf("string");
 
     const cookies = res.headers["set-cookie"] as unknown as string[];
-    expect(cookies).toHaveLength(2);
+    expect(cookies).toHaveLength(3);
     expect(cookies.every((c) => c.includes("HttpOnly"))).toBe(true);
     expect(cookies.some((c) => c.startsWith("bo_access="))).toBe(true);
     expect(
       cookies.some((c) => c.startsWith("bo_refresh=") && c.includes("Path=/api/v1/auth")),
     ).toBe(true);
+    expect(cookies.some((c) => c.startsWith("bo_session=1") && c.includes("Path=/"))).toBe(true);
   });
 
   it("no devuelve la contraseña ni su hash en la respuesta", async () => {

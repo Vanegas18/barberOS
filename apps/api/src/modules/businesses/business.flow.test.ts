@@ -1,7 +1,6 @@
-import mongoose from "mongoose";
-import { MongoMemoryReplSet } from "mongodb-memory-server";
 import request from "supertest";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
+import { useTestDatabase } from "../../../tests/db.js";
 import { createApp } from "../../app.js";
 import { ActivationCodeModel } from "../activation-codes/activation-code.model.js";
 import { issueActivationCode } from "../activation-codes/activation-code.service.js";
@@ -10,7 +9,6 @@ import { UserModel } from "../auth/user.model.js";
 import { MembershipModel } from "../memberships/membership.model.js";
 import { BusinessModel } from "./business.model.js";
 
-let replSet: MongoMemoryReplSet;
 const app = createApp();
 
 type WithHeaders = { headers: Record<string, unknown> };
@@ -32,7 +30,6 @@ async function signUp(email: string): Promise<string> {
 const newCode = async (trialDays = 0) =>
   (await issueActivationCode({ label: "Prueba", trialDays })).code;
 
-/** Crea un negocio; si el body no trae código, emite uno nuevo y válido. */
 async function createBiz(cookie: string, body: Record<string, unknown>) {
   const activationCode = "activationCode" in body ? body.activationCode : await newCode();
   return request(app)
@@ -41,20 +38,7 @@ async function createBiz(cookie: string, body: Record<string, unknown>) {
     .send({ ...body, activationCode });
 }
 
-beforeAll(async () => {
-  replSet = await MongoMemoryReplSet.create({ replSet: { count: 1 } });
-  await mongoose.connect(replSet.getUri());
-  await UserModel.init();
-  await SessionModel.init();
-  await BusinessModel.init();
-  await MembershipModel.init();
-  await ActivationCodeModel.init();
-});
-
-afterAll(async () => {
-  await mongoose.disconnect();
-  await replSet.stop();
-});
+useTestDatabase();
 
 beforeEach(async () => {
   await UserModel.deleteMany({});

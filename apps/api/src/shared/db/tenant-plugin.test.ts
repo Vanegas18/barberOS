@@ -1,6 +1,6 @@
 import mongoose, { Schema, Types } from "mongoose";
-import { MongoMemoryReplSet } from "mongodb-memory-server";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
+import { useTestDatabase } from "../../../tests/db.js";
 import { tenantPlugin } from "./tenant-plugin.js";
 
 interface TenantItemDoc {
@@ -15,18 +15,7 @@ const TenantItem = mongoose.model("TenantItem", itemSchema);
 const businessA = new Types.ObjectId();
 const businessB = new Types.ObjectId();
 
-let replSet: MongoMemoryReplSet;
-
-beforeAll(async () => {
-  replSet = await MongoMemoryReplSet.create({ replSet: { count: 1 } });
-  await mongoose.connect(replSet.getUri());
-  await TenantItem.init();
-});
-
-afterAll(async () => {
-  await mongoose.disconnect();
-  await replSet.stop();
-});
+useTestDatabase();
 
 beforeEach(async () => {
   await TenantItem.deleteMany({}).setOptions({ skipTenantCheck: true });

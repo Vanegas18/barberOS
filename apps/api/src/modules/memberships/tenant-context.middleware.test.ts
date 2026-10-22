@@ -1,8 +1,8 @@
 import express, { Router } from "express";
-import mongoose, { Types } from "mongoose";
-import { MongoMemoryReplSet } from "mongodb-memory-server";
+import { Types } from "mongoose";
 import request from "supertest";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
+import { useTestDatabase } from "../../../tests/db.js";
 import { errorHandler } from "../../shared/middleware/error-handler.js";
 import { requestId } from "../../shared/middleware/request-id.js";
 import { requirePermission } from "../../shared/middleware/require-permission.js";
@@ -35,7 +35,6 @@ function buildApp() {
   return app;
 }
 
-let replSet: MongoMemoryReplSet;
 const app = buildApp();
 
 const userId = new Types.ObjectId().toString(); // owner en A, barbero en B
@@ -44,17 +43,7 @@ let shopA: string;
 let shopB: string;
 let ownerMembershipA: string;
 
-beforeAll(async () => {
-  replSet = await MongoMemoryReplSet.create({ replSet: { count: 1 } });
-  await mongoose.connect(replSet.getUri());
-  await BusinessModel.init();
-  await MembershipModel.init();
-});
-
-afterAll(async () => {
-  await mongoose.disconnect();
-  await replSet.stop();
-});
+useTestDatabase();
 
 beforeEach(async () => {
   await BusinessModel.deleteMany({});

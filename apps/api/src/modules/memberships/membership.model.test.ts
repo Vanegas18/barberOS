@@ -1,22 +1,10 @@
-import mongoose, { Types } from "mongoose";
-import { MongoMemoryReplSet } from "mongodb-memory-server";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { Types } from "mongoose";
+import { beforeEach, describe, expect, it } from "vitest";
+import { useTestDatabase } from "../../../tests/db.js";
 import { BusinessModel } from "../businesses/business.model.js";
 import { MembershipModel } from "./membership.model.js";
 
-let replSet: MongoMemoryReplSet;
-
-beforeAll(async () => {
-  replSet = await MongoMemoryReplSet.create({ replSet: { count: 1 } });
-  await mongoose.connect(replSet.getUri());
-  await BusinessModel.init();
-  await MembershipModel.init();
-});
-
-afterAll(async () => {
-  await mongoose.disconnect();
-  await replSet.stop();
-});
+useTestDatabase();
 
 beforeEach(async () => {
   await BusinessModel.deleteMany({});

@@ -1,22 +1,11 @@
 import mongoose, { Schema } from "mongoose";
-import { MongoMemoryReplSet } from "mongodb-memory-server";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
+import { useTestDatabase } from "../../../tests/db.js";
 import { withTransaction } from "./transaction.js";
 
 const TxItem = mongoose.model("TxItem", new Schema({ name: { type: String, required: true } }));
 
-let replSet: MongoMemoryReplSet;
-
-beforeAll(async () => {
-  replSet = await MongoMemoryReplSet.create({ replSet: { count: 1 } });
-  await mongoose.connect(replSet.getUri());
-  await TxItem.createCollection();
-});
-
-afterAll(async () => {
-  await mongoose.disconnect();
-  await replSet.stop();
-});
+useTestDatabase();
 
 beforeEach(async () => {
   await TxItem.deleteMany({});

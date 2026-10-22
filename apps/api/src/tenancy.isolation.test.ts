@@ -1,7 +1,7 @@
-import mongoose, { Types } from "mongoose";
-import { MongoMemoryReplSet } from "mongodb-memory-server";
+import { Types } from "mongoose";
 import request from "supertest";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
+import { useTestDatabase } from "../tests/db.js";
 import type { MembershipStatus, Role } from "@barberos/contracts";
 import { createApp } from "./app.js";
 import { ActivationCodeModel } from "./modules/activation-codes/activation-code.model.js";
@@ -11,7 +11,6 @@ import { UserModel } from "./modules/auth/user.model.js";
 import { BusinessModel } from "./modules/businesses/business.model.js";
 import { MembershipModel } from "./modules/memberships/membership.model.js";
 
-let replSet: MongoMemoryReplSet;
 const app = createApp();
 
 type WithHeaders = { headers: Record<string, unknown> };
@@ -74,20 +73,7 @@ let beto: Actor;
 let anaBiz: string;
 let betoBiz: string;
 
-beforeAll(async () => {
-  replSet = await MongoMemoryReplSet.create({ replSet: { count: 1 } });
-  await mongoose.connect(replSet.getUri());
-  await UserModel.init();
-  await SessionModel.init();
-  await BusinessModel.init();
-  await MembershipModel.init();
-  await ActivationCodeModel.init();
-});
-
-afterAll(async () => {
-  await mongoose.disconnect();
-  await replSet.stop();
-});
+useTestDatabase();
 
 beforeEach(async () => {
   await UserModel.deleteMany({});
