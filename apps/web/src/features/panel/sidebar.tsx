@@ -7,7 +7,7 @@ import { Logo } from "@/components/brand/logo";
 import { useLogout, useMe } from "@/features/auth/hooks";
 import { ROLE_LABEL, businessBadge, personInitials } from "@/features/businesses/labels";
 import { cn } from "@/lib/utils";
-import { hrefFor, navFor } from "./nav";
+import { hrefFor, isActivePath, navFor } from "./nav";
 import { useCurrentBusiness } from "./panel-context";
 
 export function Sidebar() {
@@ -39,7 +39,7 @@ export function Sidebar() {
       <nav aria-label="Principal" className="flex flex-col gap-1">
         {navFor(business.role).map((item) => {
           const href = hrefFor(business.slug, item.segment);
-          const active = pathname === href;
+          const active = isActivePath(pathname, href, item.segment);
           const Icon = item.icon;
           return (
             <Link

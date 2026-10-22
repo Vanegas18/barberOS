@@ -1,11 +1,13 @@
 "use client";
 
-import { Check, Plus } from "lucide-react";
+import { Check, ChevronRight, Plus } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { StatusPill } from "@/components/ui/status-pill";
 import { formatLongDate } from "@/features/businesses/labels";
 import { useCurrentBusiness } from "@/features/panel/panel-context";
+import { useServices } from "@/features/services/hooks";
 import { cn } from "@/lib/utils";
 
 const NO_BARBERS = "Agrega al menos un barbero para crear citas.";
@@ -78,14 +80,29 @@ export function AgendaEmpty() {
   );
 }
 
-const STEPS = [
-  { label: "Crear tu barbería", done: true },
-  { label: "Agregar barberos", done: false, soon: true },
-  { label: "Agregar servicios y precios", done: false, soon: true },
-] as const;
+interface Step {
+  label: string;
+  done: boolean;
+  /** A dónde ir para completarlo. Sin href y sin hacer: llega en otra fase. */
+  href?: string;
+}
 
 function SetupChecklist() {
-  const doneCount = STEPS.filter((s) => s.done).length;
+  const business = useCurrentBusiness();
+  const services = useServices(business.id);
+  const hasServices = services.data?.some((s) => s.active) ?? false;
+
+  const steps: Step[] = [
+    { label: "Crear tu barbería", done: true },
+    { label: "Agregar barberos", done: false },
+    {
+      label: "Agregar servicios y precios",
+      done: hasServices,
+      href: `/${business.slug}/ajustes/servicios`,
+    },
+  ];
+  const doneCount = steps.filter((s) => s.done).length;
+
   return (
     <section
       aria-labelledby="setup-title"
@@ -96,50 +113,68 @@ function SetupChecklist() {
           Arma tu barbería
         </h2>
         <span className="text-sm font-semibold text-brand-ink">
-          {doneCount} de {STEPS.length}
+          {doneCount} de {steps.length}
         </span>
       </div>
       <div
         role="progressbar"
         aria-label="Avance de la configuración"
         aria-valuemin={0}
-        aria-valuemax={STEPS.length}
+        aria-valuemax={steps.length}
         aria-valuenow={doneCount}
         className="h-2 overflow-hidden rounded-full bg-surface"
       >
         <div
-          className="h-full rounded-full bg-ink"
-          style={{ width: `${(doneCount / STEPS.length) * 100}%` }}
+          className="h-full rounded-full bg-ink transition-[width] duration-200"
+          style={{ width: `${(doneCount / steps.length) * 100}%` }}
         />
       </div>
       <ol className="flex flex-col gap-2">
-        {STEPS.map((step) => (
-          <li
-            key={step.label}
-            className="flex min-h-12 items-center gap-3 rounded-md bg-surface px-3 py-2"
-          >
-            <span
-              aria-hidden="true"
-              className={cn(
-                "flex size-7 shrink-0 items-center justify-center rounded-full",
-                step.done ? "bg-ink text-brand" : "border-[1.5px] border-control",
-              )}
-            >
-              {step.done && <Check className="size-4" strokeWidth={2.5} />}
-            </span>
-            <span
-              className={cn(
-                "flex-1 text-sm",
-                step.done ? "text-ink-muted line-through" : "font-semibold",
-              )}
-            >
-              {step.label}
-              {step.done && <span className="sr-only"> (hecho)</span>}
-            </span>
-            {"soon" in step && <StatusPill tone="done">Muy pronto</StatusPill>}
+        {steps.map((step) => (
+          <li key={step.label}>
+            <StepRow step={step} />
           </li>
         ))}
       </ol>
     </section>
   );
+}
+
+function StepRow({ step }: { step: Step }) {
+  const content = (
+    <>
+      <span
+        aria-hidden="true"
+        className={cn(
+          "flex size-7 shrink-0 items-center justify-center rounded-full",
+          step.done ? "bg-ink text-brand" : "border-[1.5px] border-control",
+        )}
+      >
+        {step.done && <Check className="size-4" strokeWidth={2.5} />}
+      </span>
+      <span
+        className={cn(
+          "flex-1 text-sm",
+          step.done ? "text-ink-muted line-through" : "font-semibold",
+        )}
+      >
+        {step.label}
+        {step.done && <span className="sr-only"> (hecho)</span>}
+      </span>
+      {!step.done && !step.href && <StatusPill tone="done">Muy pronto</StatusPill>}
+      {!step.done && step.href && (
+        <ChevronRight className="size-4 text-ink-muted" aria-hidden="true" />
+      )}
+    </>
+  );
+  const row = "flex min-h-12 items-center gap-3 rounded-md bg-surface px-3 py-2";
+
+  if (!step.done && step.href) {
+    return (
+      <Link href={step.href} className={cn(row, "transition-colors duration-150 hover:bg-ground")}>
+        {content}
+      </Link>
+    );
+  }
+  return <div className={row}>{content}</div>;
 }

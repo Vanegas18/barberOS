@@ -28,7 +28,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { segment: "ventas", label: "Ventas", icon: ReceiptText, roles: MANAGERS, phase: 5 },
   { segment: "caja", label: "Caja", icon: Wallet, roles: MANAGERS, phase: 6 },
   { segment: "equipo", label: "Equipo", icon: UsersRound, roles: MANAGERS, phase: 2 },
-  { segment: "ajustes", label: "Ajustes", icon: SlidersHorizontal, roles: MANAGERS, phase: 2 },
+  { segment: "ajustes", label: "Ajustes", icon: SlidersHorizontal, roles: MANAGERS },
   { segment: "", label: "Mi agenda", icon: CalendarDays, roles: BARBER },
   { segment: "servicios", label: "Mis servicios", icon: Scissors, roles: BARBER, phase: 5 },
   { segment: "ganancias", label: "Ganancias", icon: Banknote, roles: BARBER, phase: 5 },
@@ -46,4 +46,8 @@ export function mobileNavFor(role: Role): { main: NavItem[]; more: NavItem[] } {
 
 export function hrefFor(slug: string, segment: string): string {
   return segment ? `/${slug}/${segment}` : `/${slug}`;
+}
+
+export function isActivePath(pathname: string, href: string, segment: string): boolean {
+  return pathname === href || (segment !== "" && pathname.startsWith(`${href}/`));
 }

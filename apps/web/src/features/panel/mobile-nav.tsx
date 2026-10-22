@@ -7,8 +7,8 @@ import { BrandMark } from "@/components/brand/logo";
 import { useMe } from "@/features/auth/hooks";
 import { personInitials } from "@/features/businesses/labels";
 import { cn } from "@/lib/utils";
-import { hrefFor, mobileNavFor } from "./nav";
 import { useCurrentBusiness } from "./panel-context";
+import { hrefFor, isActivePath, mobileNavFor } from "./nav";
 
 export function MobileHeader() {
   const business = useCurrentBusiness();
@@ -43,12 +43,16 @@ export function BottomNav() {
       key: item.label,
       label: item.label,
       icon: item.icon,
+      segment: item.segment,
       href: hrefFor(business.slug, item.segment),
     })),
-    ...(more.length > 0 ? [{ key: "mas", label: "Más", icon: Ellipsis, href: moreHref }] : []),
+    ...(more.length > 0
+      ? [{ key: "mas", label: "Más", icon: Ellipsis, segment: "mas", href: moreHref }]
+      : []),
   ];
   const moreActive =
-    pathname === moreHref || more.some((i) => pathname === hrefFor(business.slug, i.segment));
+    pathname === moreHref ||
+    more.some((i) => isActivePath(pathname, hrefFor(business.slug, i.segment), i.segment));
 
   return (
     <nav
@@ -60,7 +64,8 @@ export function BottomNav() {
         style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}
       >
         {items.map((item) => {
-          const active = item.key === "mas" ? moreActive : pathname === item.href;
+          const active =
+            item.key === "mas" ? moreActive : isActivePath(pathname, item.href, item.segment);
           const Icon = item.icon;
           return (
             <li key={item.key} className="flex">
