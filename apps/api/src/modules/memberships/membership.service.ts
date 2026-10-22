@@ -19,10 +19,6 @@ export function isObjectIdString(value: string): boolean {
   return OBJECT_ID_REGEX.test(value);
 }
 
-/**
- * Devuelve la membresía ACTIVA del usuario en el negocio, o null.
- * Siempre consulta la base: nunca se confía en claims del token.
- */
 export async function findActiveMembership(
   businessId: string,
   userId: string,
@@ -41,7 +37,6 @@ export async function findActiveMembership(
   return { membershipId: membership._id.toString(), role: membership.role };
 }
 
-/** Crea la membresía owner. Debe llamarse dentro de una transacción. */
 export async function createOwnerMembership(
   businessId: string,
   userId: string,
@@ -62,8 +57,6 @@ export async function createOwnerMembership(
 export async function listActiveMembershipsForUser(userId: string): Promise<UserMembership[]> {
   if (!isObjectIdString(userId)) return [];
 
-  // skipTenantCheck: caso legítimo. Aún no hay negocio activo; se pregunta
-  // justamente "¿a qué negocios pertenece este usuario?". Filtramos por userId.
   const memberships = await MembershipModel.find({
     userId: new Types.ObjectId(userId),
     status: "active",
@@ -73,4 +66,24 @@ export async function listActiveMembershipsForUser(userId: string): Promise<User
     .lean();
 
   return memberships.map((m) => ({ businessId: m.businessId.toString(), role: m.role }));
+}
+
+export async function createMembership(
+  businessId: string,
+  userId: string,
+  role: Exclude<Role, "owner">,
+  session: ClientSession,
+): Promise<string> {
+  const [membership] = await MembershipModel.create(
+    [
+      {
+        businessId: new Types.ObjectId(businessId),
+        userId: new Types.ObjectId(userId),
+        role,
+      },
+    ],
+    { session },
+  );
+  if (!membership) throw new Error("No se pudo crear la membresía");
+  return membership._id.toString();
 }

@@ -144,3 +144,12 @@ export async function updateBusiness(
   if (!business) throw AppError.notFound();
   return { ...toSummary(business), role: ctx.role };
 }
+
+export async function findBusinessBasics(
+  businessId: string,
+): Promise<{ id: string; name: string; slug: string } | null> {
+  if (!isObjectIdString(businessId)) return null;
+  const business = await BusinessModel.findById(businessId).select({ name: 1, slug: 1 }).lean();
+  if (!business) return null;
+  return { id: business._id.toString(), name: business.name, slug: business.slug };
+}

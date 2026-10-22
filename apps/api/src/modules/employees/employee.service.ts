@@ -1,4 +1,4 @@
-import { Types } from "mongoose";
+import { Types, type ClientSession } from "mongoose";
 import { DEFAULT_WEEKLY_SCHEDULE, WEEKDAYS } from "@barberos/contracts";
 import type {
   CreateEmployeeInput,
@@ -202,4 +202,53 @@ export async function findEmployeeRef(
     isMe: doc.membershipId?.toString() === ctx.membershipId,
     weeklySchedule: toWeeklySchedule(doc.weeklySchedule),
   };
+}
+
+export async function findInvitableEmployee(
+  ctx: TenantContext,
+  employeeId: string,
+): Promise<{ id: string; displayName: string }> {
+  if (!isObjectIdString(employeeId)) throw notFound();
+  const doc = await EmployeeModel.findOne({ ...scope(ctx), _id: new Types.ObjectId(employeeId) })
+    .select({ displayName: 1, membershipId: 1, active: 1 })
+    .lean();
+  if (!doc) throw notFound();
+  if (!doc.active) throw AppError.conflict("Ese empleado está desactivado");
+  if (doc.membershipId) throw AppError.conflict("Ese empleado ya tiene una cuenta vinculada");
+  return { id: doc._id.toString(), displayName: doc.displayName };
+}
+
+export async function employeeNames(
+  businessId: string,
+  ids: string[],
+): Promise<Map<string, string>> {
+  if (ids.length === 0) return new Map();
+  const docs = await EmployeeModel.find({
+    businessId: new Types.ObjectId(businessId),
+    _id: { $in: ids.map((id) => new Types.ObjectId(id)) },
+  })
+    .select({ displayName: 1 })
+    .lean();
+  return new Map(docs.map((d) => [d._id.toString(), d.displayName]));
+}
+
+export async function linkEmployeeToMembership(
+  businessId: string,
+  employeeId: string,
+  membershipId: string,
+  session: ClientSession,
+): Promise<void> {
+  const result = await EmployeeModel.updateOne(
+    {
+      businessId: new Types.ObjectId(businessId),
+      _id: new Types.ObjectId(employeeId),
+      membershipId: null,
+      active: true,
+    },
+    { $set: { membershipId: new Types.ObjectId(membershipId) } },
+    { session },
+  );
+  if (result.modifiedCount === 0) {
+    throw AppError.conflict("Ese empleado ya no está disponible para vincular");
+  }
 }

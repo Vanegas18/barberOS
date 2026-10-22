@@ -28,6 +28,7 @@ const RESERVED_SLUGS: readonly string[] = [
   "precios",
   "terminos",
   "privacidad",
+  "invitacion",
 ];
 
 export const slugSchema = z
@@ -42,7 +43,7 @@ export const slugSchema = z
 export function slugify(name: string): string {
   return name
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "") // quita tildes
+    .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
@@ -64,10 +65,6 @@ function isValidTimeZone(value: string): boolean {
 
 export const timezoneSchema = z.string().refine(isValidTimeZone, "Zona horaria inválida");
 
-/**
- * Código emitido por la plataforma (ej. BRB-7K2M-Q9XD-4F8T). Aquí solo se valida la forma
- * general; la API lo normaliza (mayúsculas, sin guiones ni espacios) y lo verifica.
- */
 export const activationCodeSchema = z
   .string()
   .trim()

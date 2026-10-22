@@ -10,7 +10,12 @@ import cors from "cors";
 import helmet from "helmet";
 import { env } from "./config/env.js";
 import { originCheck } from "./shared/middleware/origin-check.js";
-import { apiLimiter, authLimiter, activationLimiter } from "./shared/middleware/rate-limit.js";
+import {
+  apiLimiter,
+  authLimiter,
+  activationLimiter,
+  invitationLimiter,
+} from "./shared/middleware/rate-limit.js";
 import {
   businessRouter,
   meRouter,
@@ -21,6 +26,10 @@ import { tenantContext } from "./modules/memberships/tenant-context.middleware.j
 import { serviceRouter } from "./modules/services/service.routes.js";
 import { employeeRouter } from "./modules/employees/employee.routes.js";
 import { scheduleRouter } from "./modules/schedules/schedule.routes.js";
+import {
+  invitationPublicRouter,
+  invitationTenantRouter,
+} from "./modules/invitations/invitation.routes.js";
 
 export function createApp() {
   const app = express();
@@ -40,11 +49,14 @@ export function createApp() {
   app.post("/api/v1/businesses", activationLimiter);
   app.use("/api/v1/businesses", businessRouter);
   app.use("/api/v1/me", meRouter);
+  app.use("/api/v1/invitations", invitationLimiter, invitationPublicRouter);
+
   // Todas las rutas privadas de un negocio cuelgan de aquí y heredan la protección.
   const tenantRouter = Router({ mergeParams: true });
   tenantRouter.use("/services", serviceRouter);
   tenantRouter.use("/employees/:employeeId", scheduleRouter);
   tenantRouter.use("/employees", employeeRouter);
+  tenantRouter.use("/invitations", invitationTenantRouter);
   tenantRouter.use("/", businessTenantRouter);
 
   app.use("/api/v1/businesses/:businessId", authenticate, tenantContext, tenantRouter);
