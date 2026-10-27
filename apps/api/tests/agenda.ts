@@ -14,7 +14,7 @@ export interface Agenda {
 }
 
 export async function setupAgenda(slug: string): Promise<Agenda> {
-  const owner = await signUp("dueno@ejemplo.com");
+  const owner = await signUp("dueno@ejemplo.com", "Juan Dueño");
   const bizId = await createBusinessAs(owner, slug);
   const admin = await joinAs(bizId, "admin@ejemplo.com", "admin");
   const barber = await joinAs(bizId, "barbero@ejemplo.com", "barber");

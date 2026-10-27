@@ -1,5 +1,7 @@
 import { Types, type ClientSession } from "mongoose";
 import {
+  APPOINTMENT_ACTIONS,
+  APPOINTMENT_UNDO_MINUTES,
   MINUTES_PER_DAY,
   appointmentEndMinutes,
   hasPermission,
@@ -10,6 +12,7 @@ import {
   timeToMinutes,
   SCHEDULE_STEP_MINUTES,
   type Appointment,
+  type AppointmentAction,
   type AppointmentDayQuery,
   type AppointmentWithWarnings,
   type CreateAppointmentInput,
@@ -38,7 +41,22 @@ import { AppointmentSlotModel } from "./appointment-slot.model.js";
 
 type AppointmentLean = AppointmentDoc & { _id: Types.ObjectId };
 
-export function toAppointment(doc: AppointmentLean): Appointment {
+export function isStatusAction(kind: string): kind is AppointmentAction {
+  return (APPOINTMENT_ACTIONS as readonly string[]).includes(kind);
+}
+
+export function canUndoLastChange(
+  doc: Pick<AppointmentDoc, "history">,
+  ctx: TenantContext,
+  now: Date = new Date(),
+): boolean {
+  const last = doc.history.at(-1);
+  if (!last || !isStatusAction(last.kind)) return false;
+  if (now.getTime() - last.at.getTime() > APPOINTMENT_UNDO_MINUTES * 60_000) return false;
+  return canManageAll(ctx) || last.byMembershipId.toString() === ctx.membershipId;
+}
+
+export function toAppointment(doc: AppointmentLean, ctx?: TenantContext): Appointment {
   return {
     id: doc._id.toString(),
     employeeId: doc.employeeId.toString(),
@@ -60,7 +78,7 @@ export function toAppointment(doc: AppointmentLean): Appointment {
     source: doc.source,
     recordedAfter: doc.recordedAfter,
     note: doc.note ?? null,
-    canUndo: false,
+    canUndo: ctx ? canUndoLastChange(doc, ctx) : false,
     createdAt: doc.createdAt.toISOString(),
     updatedAt: doc.updatedAt.toISOString(),
   };
@@ -252,7 +270,7 @@ export async function listDay(
   })
     .sort({ startMinutes: 1, createdAt: 1 })
     .lean();
-  return docs.map(toAppointment);
+  return docs.map((doc) => toAppointment(doc, ctx));
 }
 
 export async function findVisibleAppointment(
@@ -276,5 +294,5 @@ export async function getAppointment(
   ctx: TenantContext,
   appointmentId: string,
 ): Promise<Appointment> {
-  return toAppointment(await findVisibleAppointment(ctx, appointmentId));
+  return toAppointment(await findVisibleAppointment(ctx, appointmentId), ctx);
 }

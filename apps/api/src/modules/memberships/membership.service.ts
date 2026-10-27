@@ -1,6 +1,7 @@
 import { Types } from "mongoose";
 import type { ClientSession } from "mongoose";
 import type { Role } from "@barberos/contracts";
+import { UserModel } from "../auth/user.model.js";
 import { MembershipModel } from "./membership.model.js";
 
 export interface ActiveMembership {
@@ -86,4 +87,25 @@ export async function createMembership(
   );
   if (!membership) throw new Error("No se pudo crear la membresía");
   return membership._id.toString();
+}
+
+export async function memberNames(
+  businessId: string,
+  membershipIds: string[],
+): Promise<Map<string, string>> {
+  const unique = [...new Set(membershipIds)];
+  if (unique.length === 0) return new Map();
+  const memberships = await MembershipModel.find({
+    businessId: new Types.ObjectId(businessId),
+    _id: { $in: unique.map((id) => new Types.ObjectId(id)) },
+  })
+    .select({ userId: 1 })
+    .lean();
+  const users = await UserModel.find({ _id: { $in: memberships.map((m) => m.userId) } })
+    .select({ name: 1 })
+    .lean();
+  const userName = new Map(users.map((u) => [u._id.toString(), u.name]));
+  return new Map(
+    memberships.map((m) => [m._id.toString(), userName.get(m.userId.toString()) ?? "Usuario"]),
+  );
 }

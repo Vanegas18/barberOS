@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import type {
+  AppointmentActionInput,
   AppointmentDayQuery,
   CreateAppointmentInput,
   RescheduleAppointmentInput,
@@ -9,6 +10,7 @@ import { AppError } from "../../shared/errors/app-error.js";
 import type { TenantContext } from "../../shared/middleware/require-permission.js";
 import { createAppointment, getAppointment, listDay } from "./appointment.service.js";
 import { rescheduleAppointment } from "./reschedule.service.js";
+import { appointmentHistory, changeStatus, undoLastChange } from "./status.service.js";
 import { registerWalkIn } from "./walk-in.service.js";
 
 function tenantOf(req: Request): TenantContext {
@@ -51,4 +53,20 @@ export async function reschedule(req: Request, res: Response): Promise<void> {
     req.validated.body as RescheduleAppointmentInput,
   );
   res.json(result);
+}
+
+export async function act(req: Request, res: Response): Promise<void> {
+  const { action } = req.validated.body as AppointmentActionInput;
+  const appointment = await changeStatus(tenantOf(req), appointmentIdOf(req), action);
+  res.json({ appointment });
+}
+
+export async function undo(req: Request, res: Response): Promise<void> {
+  const appointment = await undoLastChange(tenantOf(req), appointmentIdOf(req));
+  res.json({ appointment });
+}
+
+export async function history(req: Request, res: Response): Promise<void> {
+  const changes = await appointmentHistory(tenantOf(req), appointmentIdOf(req));
+  res.json({ history: changes });
 }
