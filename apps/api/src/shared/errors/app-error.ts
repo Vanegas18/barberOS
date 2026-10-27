@@ -35,7 +35,7 @@ export class AppError extends Error {
     return new AppError(404, "NOT_FOUND", message);
   }
 
-  static conflict(message = "Conflicto con el estado actual del recurso") {
-    return new AppError(409, "CONFLICT", message);
+  static conflict(message = "Conflicto con el estado actual del recurso", details?: unknown) {
+    return new AppError(409, "CONFLICT", message, details);
   }
 }

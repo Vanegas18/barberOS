@@ -26,6 +26,7 @@ import { tenantContext } from "./modules/memberships/tenant-context.middleware.j
 import { serviceRouter } from "./modules/services/service.routes.js";
 import { employeeRouter } from "./modules/employees/employee.routes.js";
 import { scheduleRouter } from "./modules/schedules/schedule.routes.js";
+import { customerRouter } from "./modules/customers/customer.routes.js";
 import {
   invitationPublicRouter,
   invitationTenantRouter,
@@ -57,6 +58,7 @@ export function createApp() {
   tenantRouter.use("/employees/:employeeId", scheduleRouter);
   tenantRouter.use("/employees", employeeRouter);
   tenantRouter.use("/invitations", invitationTenantRouter);
+  tenantRouter.use("/customers", customerRouter);
   tenantRouter.use("/", businessTenantRouter);
 
   app.use("/api/v1/businesses/:businessId", authenticate, tenantContext, tenantRouter);
