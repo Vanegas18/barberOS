@@ -27,3 +27,19 @@ export const optionalPhoneSchema = z
     }
     return phone;
   });
+
+export const phoneSchema = z
+  .string("Ingresa el celular")
+  .trim()
+  .min(1, "Ingresa el celular")
+  .transform((value, ctx) => {
+    const phone = normalizePhone(value);
+    if (!phone) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Celular inválido. Ej.: 300 123 4567 o +57 300 123 4567",
+      });
+      return z.NEVER;
+    }
+    return phone;
+  });

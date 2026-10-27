@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { objectIdSchema } from "./ids.ts";
 
 export const INVITATION_TTL_DAYS = 7;
 
@@ -7,8 +8,6 @@ export type InvitableRole = (typeof INVITABLE_ROLES)[number];
 
 export const INVITATION_STATUSES = ["pending", "accepted", "revoked"] as const;
 export type InvitationStatus = (typeof INVITATION_STATUSES)[number];
-
-const objectIdSchema = z.string().regex(/^[a-f\d]{24}$/i, "Identificador inválido");
 
 export const createInvitationSchema = z
   .object({

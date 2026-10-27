@@ -12,6 +12,9 @@ export const API_ERROR_CODES = [
   "BUSINESS_SUSPENDED",
   "TRIAL_EXPIRED",
   "INVITATION_INVALID",
+  "SLOT_TAKEN",
+  "INVALID_STATUS_CHANGE",
+  "UNDO_NOT_AVAILABLE",
 ] as const;
 
 export type ApiErrorCode = (typeof API_ERROR_CODES)[number];

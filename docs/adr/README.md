@@ -25,3 +25,4 @@ como "Reemplazada por NNNN".
 | [0017](0017-redireccion-segura-tras-ingresar.md)               | Volver a la página de origen tras ingresar (?next=) de forma segura          | Aceptada                              |
 | [0018](0018-pruebas-con-un-solo-mongodb.md)                    | Pruebas de la API con un solo MongoDB en memoria                             | Aceptada                              |
 | [0019](0019-citas-con-tres-estados.md)                         | Citas con tres estados y permisos por rol                                    | Aceptada (se implementa en la Fase 3) |
+| [0020](0020-sin-cita-y-registro-posterior.md)                  | Sin cita y registro posterior                                                | Aceptada (se implementa en la Fase 3) |

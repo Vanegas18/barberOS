@@ -16,7 +16,6 @@ export type BusinessStatus = z.infer<typeof businessStatusSchema>;
 
 export const APPOINTMENT_STATUSES = [
   "pending",
-  "confirmed",
   "in_service",
   "completed",
   "cancelled",
