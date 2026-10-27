@@ -252,3 +252,39 @@ export async function linkEmployeeToMembership(
     throw AppError.conflict("Ese empleado ya no está disponible para vincular");
   }
 }
+
+export interface BookableEmployee {
+  id: string;
+  displayName: string;
+  active: boolean;
+  isMe: boolean;
+  weeklySchedule: WeeklySchedule;
+}
+
+export async function findBookableEmployee(
+  ctx: TenantContext,
+  employeeId: string,
+): Promise<BookableEmployee | null> {
+  if (!isObjectIdString(employeeId)) return null;
+  const doc = await EmployeeModel.findOne({ ...scope(ctx), _id: new Types.ObjectId(employeeId) })
+    .select({ displayName: 1, active: 1, membershipId: 1, weeklySchedule: 1 })
+    .lean();
+  if (!doc) return null;
+  return {
+    id: doc._id.toString(),
+    displayName: doc.displayName,
+    active: doc.active,
+    isMe: doc.membershipId?.toString() === ctx.membershipId,
+    weeklySchedule: toWeeklySchedule(doc.weeklySchedule),
+  };
+}
+
+export async function findMyEmployeeId(ctx: TenantContext): Promise<string | null> {
+  const doc = await EmployeeModel.findOne({
+    ...scope(ctx),
+    membershipId: new Types.ObjectId(ctx.membershipId),
+  })
+    .select({ _id: 1 })
+    .lean();
+  return doc ? doc._id.toString() : null;
+}

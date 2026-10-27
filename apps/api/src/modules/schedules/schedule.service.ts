@@ -53,3 +53,12 @@ export async function deleteException(
   const result = await ScheduleExceptionModel.deleteOne({ ...scope(ctx, employeeId), date });
   return result.deletedCount > 0;
 }
+
+export async function findException(
+  ctx: TenantContext,
+  employeeId: string,
+  date: string,
+): Promise<ScheduleException | null> {
+  const doc = await ScheduleExceptionModel.findOne({ ...scope(ctx, employeeId), date }).lean();
+  return doc ? toException(doc) : null;
+}

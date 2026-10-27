@@ -1,5 +1,10 @@
 import { Types } from "mongoose";
-import type { CreateServiceInput, Service, UpdateServiceInput } from "@barberos/contracts";
+import type {
+  AppointmentService,
+  CreateServiceInput,
+  Service,
+  UpdateServiceInput,
+} from "@barberos/contracts";
 import { AppError } from "../../shared/errors/app-error.js";
 import type { TenantContext } from "../../shared/middleware/require-permission.js";
 import { isObjectIdString } from "../memberships/membership.service.js";
@@ -117,4 +122,31 @@ export async function updateService(
     if (isDuplicateKeyError(err)) throw duplicateName();
     throw err;
   }
+}
+
+export async function findServicesForBooking(
+  ctx: TenantContext,
+  serviceIds: string[],
+): Promise<AppointmentService[]> {
+  const docs = await ServiceModel.find({
+    ...scope(ctx),
+    _id: { $in: serviceIds.map((id) => new Types.ObjectId(id)) },
+    active: true,
+  }).lean();
+  const byId = new Map(docs.map((d) => [d._id.toString(), d]));
+  const missing = serviceIds.some((id) => !byId.has(id));
+  if (missing) {
+    throw AppError.validation([
+      { part: "body", path: "serviceIds", message: "Algún servicio no existe o está desactivado" },
+    ]);
+  }
+  return serviceIds.map((id) => {
+    const doc = byId.get(id)!;
+    return {
+      serviceId: id,
+      name: doc.name,
+      price: doc.price,
+      durationMinutes: doc.durationMinutes,
+    };
+  });
 }

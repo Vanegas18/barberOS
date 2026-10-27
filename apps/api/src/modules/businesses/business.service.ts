@@ -153,3 +153,9 @@ export async function findBusinessBasics(
   if (!business) return null;
   return { id: business._id.toString(), name: business.name, slug: business.slug };
 }
+
+export async function findBusinessTimezone(businessId: string): Promise<string> {
+  const business = await BusinessModel.findById(businessId).select({ timezone: 1 }).lean();
+  if (!business) throw AppError.notFound("Negocio no encontrado");
+  return business.timezone;
+}

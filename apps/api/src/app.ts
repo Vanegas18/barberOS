@@ -27,6 +27,7 @@ import { serviceRouter } from "./modules/services/service.routes.js";
 import { employeeRouter } from "./modules/employees/employee.routes.js";
 import { scheduleRouter } from "./modules/schedules/schedule.routes.js";
 import { customerRouter } from "./modules/customers/customer.routes.js";
+import { appointmentRouter } from "./modules/appointments/appointment.routes.js";
 import {
   invitationPublicRouter,
   invitationTenantRouter,
@@ -59,6 +60,7 @@ export function createApp() {
   tenantRouter.use("/employees", employeeRouter);
   tenantRouter.use("/invitations", invitationTenantRouter);
   tenantRouter.use("/customers", customerRouter);
+  tenantRouter.use("/appointments", appointmentRouter);
   tenantRouter.use("/", businessTenantRouter);
 
   app.use("/api/v1/businesses/:businessId", authenticate, tenantContext, tenantRouter);
