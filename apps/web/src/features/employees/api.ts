@@ -1,11 +1,18 @@
 import type { CreateEmployeeInput, Employee, UpdateEmployeeInput } from "@barberos/contracts";
-import { api } from "@/lib/api/client";
+import { ApiError, api } from "@/lib/api/client";
 
 const base = (businessId: string) => `/businesses/${businessId}/employees`;
 
 export const employeesApi = {
   list: (businessId: string) =>
     api<{ employees: Employee[] }>(base(businessId)).then((r) => r.employees),
+  me: (businessId: string) =>
+    api<{ employee: Employee }>(`${base(businessId)}/me`)
+      .then((r) => r.employee)
+      .catch((err: unknown) => {
+        if (err instanceof ApiError && err.status === 404) return null;
+        throw err;
+      }),
   create: (businessId: string, input: CreateEmployeeInput) =>
     api<{ employee: Employee }>(base(businessId), { method: "POST", body: input }).then(
       (r) => r.employee,

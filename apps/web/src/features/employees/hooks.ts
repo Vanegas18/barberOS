@@ -4,7 +4,16 @@ import { employeesApi } from "./api";
 
 export const employeeKeys = {
   list: (businessId: string) => ["businesses", businessId, "employees"] as const,
+  me: (businessId: string) => ["businesses", businessId, "employees", "me"] as const,
 };
+
+export function useMyEmployee(businessId: string, enabled = true) {
+  return useQuery({
+    queryKey: employeeKeys.me(businessId),
+    queryFn: () => employeesApi.me(businessId),
+    enabled,
+  });
+}
 
 export function useEmployees(businessId: string, enabled = true) {
   return useQuery({
