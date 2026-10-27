@@ -6,11 +6,13 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { StatusPill } from "@/components/ui/status-pill";
 import { formatLongDate } from "@/features/businesses/labels";
+import { useEmployees } from "@/features/employees/hooks";
 import { useCurrentBusiness } from "@/features/panel/panel-context";
 import { useServices } from "@/features/services/hooks";
 import { cn } from "@/lib/utils";
 
 const NO_BARBERS = "Agrega al menos un barbero para crear citas.";
+const SOON = "Muy pronto podrás agendar citas desde aquí.";
 
 function today(timeZone: string): string {
   const text = formatLongDate(new Date().toISOString(), timeZone);
@@ -21,9 +23,11 @@ export function AgendaEmpty() {
   const business = useCurrentBusiness();
   const isBarber = business.role === "barber";
   const [date] = useState(() => today(business.timezone));
+  const employees = useEmployees(business.id, !isBarber);
+  const hasBarbers = employees.data?.some((e) => e.active) ?? false;
 
   return (
-    <div className="mx-auto flex w-full max-w-[1040px] flex-col gap-6">
+    <div className="mx-auto flex w-full max-w-260 flex-col gap-6">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex flex-col gap-1">
           <p className="text-sm font-semibold text-ink-muted" suppressHydrationWarning>
@@ -45,7 +49,7 @@ export function AgendaEmpty() {
               </Button>
             </div>
             <p id="agenda-disabled-reason" className="text-[13px] text-ink-muted">
-              {NO_BARBERS}
+              {hasBarbers ? SOON : NO_BARBERS}
             </p>
           </div>
         )}
@@ -66,7 +70,7 @@ export function AgendaEmpty() {
             <p className="text-[15px] font-semibold">
               {isBarber ? "Hoy no tienes citas" : "Todavía no hay citas"}
             </p>
-            <p className="max-w-[340px] text-sm leading-[21px] text-ink-muted">
+            <p className="max-w-85 text-sm leading-5.25 text-ink-muted">
               {isBarber
                 ? "Cuando te asignen una cita aparecerá aquí, en orden de hora."
                 : "Cuando tengas barberos, aquí verás cada silla del día: quién llega, quién está atendiendo y quién falta."}
@@ -83,18 +87,19 @@ export function AgendaEmpty() {
 interface Step {
   label: string;
   done: boolean;
-  /** A dónde ir para completarlo. Sin href y sin hacer: llega en otra fase. */
   href?: string;
 }
 
 function SetupChecklist() {
   const business = useCurrentBusiness();
   const services = useServices(business.id);
+  const employees = useEmployees(business.id);
   const hasServices = services.data?.some((s) => s.active) ?? false;
+  const hasBarbers = employees.data?.some((e) => e.active) ?? false;
 
   const steps: Step[] = [
     { label: "Crear tu barbería", done: true },
-    { label: "Agregar barberos", done: false },
+    { label: "Agregar barberos", done: hasBarbers, href: `/${business.slug}/equipo` },
     {
       label: "Agregar servicios y precios",
       done: hasServices,

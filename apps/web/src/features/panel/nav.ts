@@ -27,7 +27,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { segment: "clientes", label: "Clientes", icon: Users, roles: MANAGERS, phase: 3 },
   { segment: "ventas", label: "Ventas", icon: ReceiptText, roles: MANAGERS, phase: 5 },
   { segment: "caja", label: "Caja", icon: Wallet, roles: MANAGERS, phase: 6 },
-  { segment: "equipo", label: "Equipo", icon: UsersRound, roles: MANAGERS, phase: 2 },
+  { segment: "equipo", label: "Equipo", icon: UsersRound, roles: MANAGERS },
   { segment: "ajustes", label: "Ajustes", icon: SlidersHorizontal, roles: MANAGERS },
   { segment: "", label: "Mi agenda", icon: CalendarDays, roles: BARBER },
   { segment: "servicios", label: "Mis servicios", icon: Scissors, roles: BARBER, phase: 5 },
