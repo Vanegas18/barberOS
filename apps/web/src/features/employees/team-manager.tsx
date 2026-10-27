@@ -1,7 +1,7 @@
 "use client";
 
 import { hasPermission, type Employee } from "@barberos/contracts";
-import { Armchair, Pencil, Plus, UserRoundPlus } from "lucide-react";
+import { Armchair, Clock, Pencil, Plus, UserRoundPlus } from "lucide-react";
 import { useState } from "react";
 import { PageError, PageLoading } from "@/components/feedback/page-state";
 import { Button } from "@/components/ui/button";
@@ -10,12 +10,19 @@ import { StatusPill } from "@/components/ui/status-pill";
 import { useMe } from "@/features/auth/hooks";
 import { personInitials } from "@/features/businesses/labels";
 import { useCurrentBusiness } from "@/features/panel/panel-context";
+import { summarizeWeek } from "@/features/schedules/labels";
+import { ScheduleEditor } from "@/features/schedules/schedule-editor";
 import { cn } from "@/lib/utils";
 import { EmployeeForm } from "./employee-form";
 import { useEmployees } from "./hooks";
 import { avatarTone, earningRuleLabel } from "./labels";
 
-type Editing = { mode: "create" } | { mode: "self" } | { mode: "edit"; employee: Employee } | null;
+type Editing =
+  | { mode: "create" }
+  | { mode: "self" }
+  | { mode: "edit"; employee: Employee }
+  | { mode: "schedule"; employee: Employee }
+  | null;
 
 export function TeamManager() {
   const business = useCurrentBusiness();
@@ -72,6 +79,7 @@ export function TeamManager() {
                     : null
                 }
                 onEdit={() => setEditing({ mode: "edit", employee })}
+                onSchedule={() => setEditing({ mode: "schedule", employee })}
               />
             </li>
           ))}
@@ -79,7 +87,20 @@ export function TeamManager() {
       )}
 
       <Dialog open={editing !== null} onOpenChange={(open) => !open && close()}>
-        {editing && (
+        {editing?.mode === "schedule" && (
+          <DialogContent
+            title={`Horario de ${editing.employee.displayName}`}
+            className="sm:max-w-150"
+          >
+            <ScheduleEditor
+              businessId={business.id}
+              employee={editing.employee}
+              timeZone={business.timezone}
+              onDone={close}
+            />
+          </DialogContent>
+        )}
+        {editing && editing.mode !== "schedule" && (
           <DialogContent
             title={
               editing.mode === "edit"
@@ -116,11 +137,13 @@ function EmployeeRow({
   tone,
   ruleLabel,
   onEdit,
+  onSchedule,
 }: {
   employee: Employee;
   tone: string;
   ruleLabel: string | null;
   onEdit: () => void;
+  onSchedule: () => void;
 }) {
   return (
     <div
@@ -152,7 +175,18 @@ function EmployeeRow({
           )}
         </div>
         {ruleLabel && <p className="text-sm text-ink-muted">{ruleLabel}</p>}
+        {employee.active && (
+          <p className="text-[13px] text-ink-muted">{summarizeWeek(employee.weeklySchedule)}</p>
+        )}
       </div>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={onSchedule}
+        aria-label={`Horario de ${employee.displayName}`}
+      >
+        <Clock aria-hidden="true" />
+      </Button>
       <Button
         variant="ghost"
         size="icon"
