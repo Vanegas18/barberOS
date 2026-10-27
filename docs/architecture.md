@@ -38,7 +38,11 @@ src/
     ├── auth/           # usuarios, sesiones, tokens, cookies
     ├── businesses/     # negocios, slug
     ├── memberships/    # membresías y tenantContext
-    └── activation-codes/
+    ├── activation-codes/
+    ├── services/       # catálogo de servicios
+    ├── employees/      # empleados, regla de ganancia, semana tipo
+    ├── schedules/      # días especiales por empleado
+    └── invitations/    # enlaces de invitación de un solo uso
 ```
 
 ### Orden de una petición
@@ -88,13 +92,15 @@ src/
 ├── app/                # solo compone rutas; sin lógica de negocio
 │   ├── (auth)/         # /ingresar, /registro
 │   ├── (cuenta)/       # /inicio, /negocios, /negocios/nuevo
-│   ├── [businessSlug]/ # panel: agenda, secciones por rol, /mas
+│   ├── [businessSlug]/ # panel: agenda, equipo, ajustes/servicios, /mas
+│   ├── invitacion/     # /invitacion/[token], pública
 │   ├── not-found.tsx
 │   └── providers.tsx   # TanStack Query y reacciones globales a 401/403
 ├── features/<dominio>/ # api.ts, hooks.ts y componentes de cada dominio
 ├── components/         # ui/ (shadcn), brand/, forms/, feedback/
 ├── config/             # configuración pública (soporte)
-└── lib/api/            # cliente HTTP, errores, refresh serializado
+├── lib/api/            # cliente HTTP, errores, refresh serializado
+└── lib/safe-next.ts    # valida ?next= (solo rutas internas)
 ```
 
 - **Rutas en español.** `app/` solo compone; la lógica vive en `features/`.

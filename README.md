@@ -5,8 +5,8 @@ los barberos, gastos y caja. Sirve tanto a un barbero independiente como a un lo
 
 Desarrollado por [Vanegas Solutions](https://www.vanegassolutions.com).
 
-> **Estado:** Fase 1 terminada (base, autenticación, multiempresa, códigos de activación y
-> panel). La agenda real llega en las Fases 2 y 3. Ver [plan de fases](#plan-de-fases).
+> **Estado:** Fase 2 terminada (servicios, equipo, horarios, reglas de ganancia e invitaciones).
+> Sigue la Fase 3: agenda interna. Ver [plan de fases](#plan-de-fases).
 
 ## Qué resuelve
 
@@ -96,7 +96,7 @@ Detalle en [docs/architecture.md](docs/architecture.md).
 | Fase | Contenido                                                                     |
 | ---- | ----------------------------------------------------------------------------- |
 | 1 ✅ | Base, autenticación, multiempresa, códigos de activación, panel               |
-| 2    | Equipo y catálogo: servicios, empleados, horarios, reglas de ganancia         |
+| 2 ✅ | Equipo y catálogo: servicios, empleados, horarios, reglas de ganancia         |
 | 3    | Agenda interna: clientes, citas, atención sin cita, anti doble reserva        |
 | 4    | Reservas públicas `/{slug}/reservar` con QR, sin cuenta para el cliente final |
 | 5    | Ventas, pagos mixtos, productos con dueño y ganancias                         |
