@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { errorMessage } from "@/lib/api/client";
 import { useRegister } from "./hooks";
 
-export function RegisterForm() {
+export function RegisterForm({ next }: { next: string }) {
   const router = useRouter();
   const registerUser = useRegister();
   const {
@@ -28,7 +28,7 @@ export function RegisterForm() {
   const onSubmit = handleSubmit(async (values) => {
     try {
       await registerUser.mutateAsync(values);
-      router.replace("/inicio");
+      router.replace(next);
     } catch (err) {
       setError("root", {
         message: errorMessage(err, {

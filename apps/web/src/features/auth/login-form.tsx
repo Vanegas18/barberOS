@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { errorMessage } from "@/lib/api/client";
 import { useLogin } from "./hooks";
 
-export function LoginForm() {
+export function LoginForm({ next }: { next: string }) {
   const router = useRouter();
   const login = useLogin();
   const {
@@ -28,7 +28,7 @@ export function LoginForm() {
   const onSubmit = handleSubmit(async (values) => {
     try {
       await login.mutateAsync(values);
-      router.replace("/inicio");
+      router.replace(next);
     } catch (err) {
       setError("root", {
         message: errorMessage(err, {

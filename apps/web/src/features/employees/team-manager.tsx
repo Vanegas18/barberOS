@@ -1,7 +1,7 @@
 "use client";
 
 import { hasPermission, type Employee } from "@barberos/contracts";
-import { Armchair, Clock, Pencil, Plus, UserRoundPlus } from "lucide-react";
+import { Armchair, Clock, Pencil, Plus, Send, ShieldPlus, UserRoundPlus } from "lucide-react";
 import { useState } from "react";
 import { PageError, PageLoading } from "@/components/feedback/page-state";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,9 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { StatusPill } from "@/components/ui/status-pill";
 import { useMe } from "@/features/auth/hooks";
 import { personInitials } from "@/features/businesses/labels";
+import { usePendingInvitations } from "@/features/invitations/hooks";
+import { InviteDialogBody } from "@/features/invitations/invite-dialog";
+import { PendingInvitations } from "@/features/invitations/pending-invitations";
 import { useCurrentBusiness } from "@/features/panel/panel-context";
 import { summarizeWeek } from "@/features/schedules/labels";
 import { ScheduleEditor } from "@/features/schedules/schedule-editor";
@@ -22,18 +25,23 @@ type Editing =
   | { mode: "self" }
   | { mode: "edit"; employee: Employee }
   | { mode: "schedule"; employee: Employee }
+  | { mode: "invite"; employee: Employee | null }
   | null;
 
 export function TeamManager() {
   const business = useCurrentBusiness();
   const me = useMe();
   const employees = useEmployees(business.id);
+  const invitations = usePendingInvitations(business.id);
   const [editing, setEditing] = useState<Editing>(null);
   const close = () => setEditing(null);
 
   const canConfigureEarnings = hasPermission(business.role, "earnings:configure");
+  const canInviteAdmins = hasPermission(business.role, "members:manage");
   const list = employees.data ?? [];
   const iAmEmployee = list.some((e) => e.isMe);
+  const pending = invitations.data ?? [];
+  const invitedIds = new Set(pending.flatMap((i) => (i.employeeId ? [i.employeeId] : [])));
 
   return (
     <div className="mx-auto flex w-full max-w-220 flex-col gap-6">
@@ -44,12 +52,23 @@ export function TeamManager() {
             Quién atiende en tu barbería y cuánto gana cada uno.
           </p>
         </div>
-        {list.length > 0 && (
-          <Button onClick={() => setEditing({ mode: "create" })}>
-            <Plus aria-hidden="true" />
-            Agregar barbero
-          </Button>
-        )}
+        <div className="flex flex-wrap gap-2">
+          {canInviteAdmins && (
+            <Button
+              variant="secondary"
+              onClick={() => setEditing({ mode: "invite", employee: null })}
+            >
+              <ShieldPlus aria-hidden="true" />
+              Invitar administrador
+            </Button>
+          )}
+          {list.length > 0 && (
+            <Button onClick={() => setEditing({ mode: "create" })}>
+              <Plus aria-hidden="true" />
+              Agregar barbero
+            </Button>
+          )}
+        </div>
       </header>
 
       {employees.isPending && <PageLoading label="Cargando tu equipo…" />}
@@ -78,15 +97,35 @@ export function TeamManager() {
                     ? earningRuleLabel(employee.earningRule, business.currency)
                     : null
                 }
+                invited={invitedIds.has(employee.id)}
                 onEdit={() => setEditing({ mode: "edit", employee })}
                 onSchedule={() => setEditing({ mode: "schedule", employee })}
+                onInvite={() => setEditing({ mode: "invite", employee })}
               />
             </li>
           ))}
         </ul>
       )}
 
+      <PendingInvitations businessId={business.id} role={business.role} invitations={pending} />
+
       <Dialog open={editing !== null} onOpenChange={(open) => !open && close()}>
+        {editing?.mode === "invite" && (
+          <DialogContent
+            title={
+              editing.employee
+                ? `Invitar a ${editing.employee.displayName}`
+                : "Invitar administrador"
+            }
+          >
+            <InviteDialogBody
+              businessId={business.id}
+              businessName={business.name}
+              employee={editing.employee}
+              onDone={close}
+            />
+          </DialogContent>
+        )}
         {editing?.mode === "schedule" && (
           <DialogContent
             title={`Horario de ${editing.employee.displayName}`}
@@ -100,7 +139,7 @@ export function TeamManager() {
             />
           </DialogContent>
         )}
-        {editing && editing.mode !== "schedule" && (
+        {(editing?.mode === "create" || editing?.mode === "self" || editing?.mode === "edit") && (
           <DialogContent
             title={
               editing.mode === "edit"
@@ -136,15 +175,21 @@ function EmployeeRow({
   employee,
   tone,
   ruleLabel,
+  invited,
   onEdit,
   onSchedule,
+  onInvite,
 }: {
   employee: Employee;
   tone: string;
   ruleLabel: string | null;
+  invited: boolean;
   onEdit: () => void;
   onSchedule: () => void;
+  onInvite: () => void;
 }) {
+  const canInvite = employee.active && !employee.hasAccount && !employee.isMe;
+
   return (
     <div
       className={cn(
@@ -170,7 +215,7 @@ function EmployeeRow({
           {!employee.active && <StatusPill tone="done">Inactivo</StatusPill>}
           {employee.active && !employee.isMe && (
             <StatusPill tone={employee.hasAccount ? "neutral" : "pending"}>
-              {employee.hasAccount ? "Con cuenta" : "Sin cuenta"}
+              {employee.hasAccount ? "Con cuenta" : invited ? "Invitado" : "Sin cuenta"}
             </StatusPill>
           )}
         </div>
@@ -179,6 +224,20 @@ function EmployeeRow({
           <p className="text-[13px] text-ink-muted">{summarizeWeek(employee.weeklySchedule)}</p>
         )}
       </div>
+      {canInvite && (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onInvite}
+          aria-label={
+            invited
+              ? `Enviar otra invitación a ${employee.displayName}`
+              : `Invitar a ${employee.displayName}`
+          }
+        >
+          <Send aria-hidden="true" />
+        </Button>
+      )}
       <Button
         variant="ghost"
         size="icon"
