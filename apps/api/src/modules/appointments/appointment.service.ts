@@ -70,7 +70,7 @@ const scope = (ctx: TenantContext) => ({ businessId: new Types.ObjectId(ctx.busi
 
 const notFound = () => AppError.notFound("Cita no encontrada");
 
-const fieldError = (path: string, message: string) =>
+export const fieldError = (path: string, message: string) =>
   AppError.validation([{ part: "body", path, message }]);
 
 export const slotTaken = () =>

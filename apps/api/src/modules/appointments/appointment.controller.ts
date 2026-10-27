@@ -1,8 +1,15 @@
 import type { Request, Response } from "express";
-import type { AppointmentDayQuery, CreateAppointmentInput } from "@barberos/contracts";
+import type {
+  AppointmentDayQuery,
+  CreateAppointmentInput,
+  RescheduleAppointmentInput,
+  WalkInInput,
+} from "@barberos/contracts";
 import { AppError } from "../../shared/errors/app-error.js";
 import type { TenantContext } from "../../shared/middleware/require-permission.js";
 import { createAppointment, getAppointment, listDay } from "./appointment.service.js";
+import { rescheduleAppointment } from "./reschedule.service.js";
+import { registerWalkIn } from "./walk-in.service.js";
 
 function tenantOf(req: Request): TenantContext {
   if (!req.tenant) throw AppError.forbidden();
@@ -30,4 +37,18 @@ export async function create(req: Request, res: Response): Promise<void> {
     req.validated.body as CreateAppointmentInput,
   );
   res.status(201).json(result);
+}
+
+export async function walkIn(req: Request, res: Response): Promise<void> {
+  const result = await registerWalkIn(tenantOf(req), req.validated.body as WalkInInput);
+  res.status(201).json(result);
+}
+
+export async function reschedule(req: Request, res: Response): Promise<void> {
+  const result = await rescheduleAppointment(
+    tenantOf(req),
+    appointmentIdOf(req),
+    req.validated.body as RescheduleAppointmentInput,
+  );
+  res.json(result);
 }

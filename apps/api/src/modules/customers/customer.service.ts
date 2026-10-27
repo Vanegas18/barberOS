@@ -164,3 +164,12 @@ export async function findOrCreateCustomer(
     throw err;
   }
 }
+
+export async function findCustomerByPhone(
+  ctx: TenantContext,
+  phone: string,
+  session?: ClientSession,
+): Promise<Customer | null> {
+  const doc = await CustomerModel.findOne({ ...scope(ctx), phone }, null, { session }).lean();
+  return doc ? toCustomer(doc) : null;
+}
